@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import threading
-import time
 
 
 class Widget():
@@ -10,6 +9,8 @@ class Widget():
     """
     #: cache the content after update
     _content = None
+    #: panel linked to
+    panel = None
     #: background for the widget
     bg = None
     #: foreground for the widget
@@ -70,43 +71,35 @@ class Widget():
     def update(self, panel):
         pass
 
-    def __init__(self, bg=None, fg=None, padding=0, fonts=None, refresh=0):
+    def __init__(self, bg=None, fg=None, padding=0, fonts=None, refresh=0,
+                 panel=None):
         self.bg = bg if bg else self.bg
         self.fg = fg if fg else self.fg
         self.fonts = fonts if fonts else self.fonts
         self.padding = padding if padding else self.padding
         self.refresh = refresh if refresh else self.refresh
+        self.panel = panel
 
 
 class TextWidget(Widget):
     text = ""
 
-    def update(self, panel):
-        new_content = self.decorate(
-            self.text, fg=self.fg, bg=self.bg, padding=self.padding,
-            font=self.fonts[0] if self.fonts else None
-        )
-        self._update_panel(panel, new_content)
+    def update(self):
+        new_content = self.decorate_with_self_attributes(self.text)
+        self._update_panel(new_content)
 
-    def start(self, panel):
+    def start(self):
+        self.update()
+
+    def __init__(self, text=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text = self.text if text is None else self.text
+
+
+class ThreadedWidget(Widget):
+
+    def start(self):
         if self.refresh == 0:
-            self.refresh = panel.refresh
+            self.refresh = self.panel.refresh
         t = threading.Thread(target=self.update)
         t.start()
-
-    def __init__(self, text, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.text = text if text else self.text
-
-
-class ThreadWidget(Widget):
-
-    def start(self, panel):
-        if self.refresh == 0:
-            self.refresh = panel.refresh
-        t = threading.Thread(target=self.update)
-        t.start()
-
-    def __init__(self, text, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.text = text if text else self.text
