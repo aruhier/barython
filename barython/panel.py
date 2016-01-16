@@ -12,8 +12,8 @@ class Panel():
         pass
 
     def update(self):
-        if self._widget_barrier.n_waiting <= 1:
-            self._widget_barrier.wait()
+        if self._widgets_barrier.n_waiting <= 1:
+            self._widgets_barrier.wait()
             self.draw()
             time.sleep(self.refresh)
 
