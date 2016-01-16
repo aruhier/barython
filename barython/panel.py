@@ -7,6 +7,7 @@ import time
 class Panel():
     _widgets_barrier = threading.Barrier(1)
     refresh = 0.1
+    widgets = []
 
     def draw(self):
         pass
