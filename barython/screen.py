@@ -45,7 +45,7 @@ class Screen():
                 list_widgets[:index] + list(widgets) + list_widgets[index:]
             )
         for w in self._widgets[alignment]:
-            w.screens.append(self)
+            w.screens.add(self)
 
     def draw(self):
         pass

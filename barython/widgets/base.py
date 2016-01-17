@@ -91,7 +91,7 @@ class Widget():
             self._refresh = refresh
         self.screens = self.screens if screens is None else self.screens
         if not self.screens:
-            self.screens = []
+            self.screens = set()
 
 
 class TextWidget(Widget):

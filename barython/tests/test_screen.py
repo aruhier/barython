@@ -40,7 +40,8 @@ def test_screen_add_widget():
     s.add_widget("r", w)
     assert s._widgets["r"][0] == w
 
-    assert w.screens[-1] == s
+    assert len(w.screens) == 1
+    assert next(iter(w.screens)) == s
 
 
 def test_screen_add_widget_insert():
@@ -67,3 +68,18 @@ def test_screen_gather():
 
     content = s.gather()
     assert content == "%{l}test"
+
+
+def test_screen_gather_multiple_widgets():
+    s = Screen()
+    w = TextWidget(text="test")
+    w1 = TextWidget(text="test1")
+    s.add_widget("l", w, w1)
+    w.update()
+    w1.update()
+
+    s.add_widget("r", w, w1)
+    s.add_widget("c", w, w1)
+
+    content = s.gather()
+    assert content == "%{l}testtest1%{c}testtest1%{r}testtest1"
