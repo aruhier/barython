@@ -3,7 +3,7 @@ import pytest
 
 from barython.panel import Panel
 from barython.screen import Screen
-from barython.widgets.base import Widget
+from barython.widgets.base import Widget, TextWidget
 
 
 def test_screen():
@@ -57,3 +57,13 @@ def test_screen_add_widget_insert():
 
     assert s._widgets["l"][0] == w1
     assert s._widgets["l"][1] == w2
+
+
+def test_screen_gather():
+    s = Screen()
+    w = TextWidget(text="test")
+    s.add_widget("l", w)
+    w.update()
+
+    content = s.gather()
+    assert content == "%{l}test"

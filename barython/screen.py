@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import OrderedDict
 import itertools
 import threading
 import time
@@ -7,9 +8,9 @@ import time
 
 class Screen():
     #: widgets to show on this screen
-    _widgets = {"l": list(), "c": list(), "r": list()}
+    _widgets = None
     #: used to limit the update
-    _widgets_barrier = threading.Barrier(1)
+    _widgets_barrier = None
     #: refresh rate
     _refresh = 0
     #: screen
@@ -49,6 +50,16 @@ class Screen():
     def draw(self):
         pass
 
+    def gather(self):
+        """
+        Gather all widgets content
+        """
+        return "".join(
+            "%{{{}}}{}".format(
+                alignment, "".join([str(widget.content) for widget in widgets])
+            ) for alignment, widgets in self._widgets.items() if widgets
+        )
+
     def update(self):
         if self._widgets_barrier.n_waiting <= 1:
             self._widgets_barrier.wait()
@@ -67,3 +78,5 @@ class Screen():
         if refresh:
             self._refresh = refresh
         self.panel = self.panel if panel is None else panel
+        self._widgets = OrderedDict([("l", []), ("c", []), ("r", [])])
+        self._widgets_barrier = threading.Barrier(1)
