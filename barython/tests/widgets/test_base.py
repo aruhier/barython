@@ -7,7 +7,7 @@ from barython.widgets.base import Widget
 
 def test_base_widget_construction():
     Widget(fg="#FFFF11", bg="#FF9021", padding=1, fonts=[1, 2], refresh=2,
-           screen=Screen())
+           screens=[Screen(), ])
 
 
 def test_base_widget_decorate_simple():

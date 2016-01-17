@@ -2,7 +2,11 @@
 
 
 class Panel():
+    #: launch one bar per screen or use only one with %{S+}
+    instance_per_screen = True
+    #: refresh rate
     refresh = 0.1
+    #: screens attached to this panel
     _screens = None
 
     def add_screen(self, *screens, index=None):

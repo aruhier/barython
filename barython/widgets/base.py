@@ -11,8 +11,8 @@ class Widget():
     _content = None
     #: refresh rate
     _refresh = 0
-    #: linked to
-    screen = None
+    #: screens linked. Used for callbacks
+    screens = None
     #: background for the widget
     bg = None
     #: foreground for the widget
@@ -29,7 +29,7 @@ class Widget():
     @property
     def refresh(self):
         if self._refresh == 0 and self.screen is not None:
-            return self.screen.refresh
+            return min([screen.refresh for screen in self.screens])
         else:
             return self._refresh
 
@@ -77,20 +77,23 @@ class Widget():
         """
         if self._content != new_content:
             self._content = new_content
-            self.screen.update()
+            for screen in self.screens:
+                screen.update()
 
     def update(self):
         pass
 
     def __init__(self, bg=None, fg=None, padding=None, fonts=None,
-                 refresh=None, screen=None):
+                 refresh=None, screens=None):
         self.bg = self.bg if bg is None else bg
         self.fg = self.fg if fg is None else fg
         self.fonts = self.fonts if fonts is None else fonts
         self.padding = self.padding if padding is None else padding
         if refresh is not None:
             self._refresh = refresh
-        self.screen = self.screen if screen is None else self.screen
+        self.screens = self.screens if screens is None else self.screens
+        if not self.screens:
+            self.screens = []
 
 
 class TextWidget(Widget):

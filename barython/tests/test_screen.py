@@ -27,16 +27,20 @@ def test_screen_refresh():
 
 def test_screen_add_widget():
     s = Screen()
-    w = Widget()
 
+    w = Widget()
     s.add_widget("l", w)
     assert s._widgets["l"][0] == w
 
+    w = Widget()
     s.add_widget("c", w)
     assert s._widgets["c"][0] == w
 
+    w = Widget()
     s.add_widget("r", w)
     assert s._widgets["r"][0] == w
+
+    assert w.screens[-1] == s
 
 
 def test_screen_add_widget_insert():

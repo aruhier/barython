@@ -6,11 +6,15 @@ import time
 
 
 class Screen():
+    #: widgets to show on this screen
+    _widgets = {"l": list(), "c": list(), "r": list()}
+    #: used to limit the update
     _widgets_barrier = threading.Barrier(1)
+    #: refresh rate
+    _refresh = 0
+    #: screen
     name = None
     panel = None
-    _refresh = 0
-    _widgets = {"l": list(), "c": list(), "r": list()}
 
     @property
     def refresh(self):
@@ -40,7 +44,7 @@ class Screen():
                 list_widgets[:index] + list(widgets) + list_widgets[index:]
             )
         for w in self._widgets[alignment]:
-            w.screen = self
+            w.screens.append(self)
 
     def draw(self):
         pass
