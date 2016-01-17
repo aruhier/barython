@@ -1,13 +1,13 @@
 
 import pytest
 
-from barython.panel import Panel
+from barython.screen import Screen
 from barython.widgets.base import Widget
 
 
 def test_base_widget_construction():
     Widget(fg="#FFFF11", bg="#FF9021", padding=1, fonts=[1, 2], refresh=2,
-           panel=Panel())
+           screen=Screen())
 
 
 def test_base_widget_decorate_simple():

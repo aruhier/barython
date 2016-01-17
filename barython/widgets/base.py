@@ -9,8 +9,10 @@ class Widget():
     """
     #: cache the content after update
     _content = None
-    #: panel linked to
-    panel = None
+    #: refresh rate
+    _refresh = 0
+    #: linked to
+    screen = None
     #: background for the widget
     bg = None
     #: foreground for the widget
@@ -19,12 +21,21 @@ class Widget():
     padding = 0
     #: list of fonts index used
     fonts = tuple()
-    #: refresh rate
-    refresh = 0
 
     @property
     def content(self):
         return self._content
+
+    @property
+    def refresh(self):
+        if self._refresh == 0 and self.screen is not None:
+            return self.screen.refresh
+        else:
+            return self._refresh
+
+    @refresh.setter
+    def refresh(self, value):
+        self._refresh = value
 
     def decorate(self, text, fg=None, bg=None, padding=0, font=None):
         """
@@ -60,25 +71,26 @@ class Widget():
 
         return self.decorate(text, **d_kwargs)
 
-    def _update_panel(self, panel, new_content):
+    def _update_screen(self, new_content):
         """
-        If content has changed, request the panel update
+        If content has changed, request the screen update
         """
         if self._content != new_content:
             self._content = new_content
-            panel.update()
+            self.screen.update()
 
-    def update(self, panel):
+    def update(self):
         pass
 
     def __init__(self, bg=None, fg=None, padding=0, fonts=None, refresh=0,
-                 panel=None):
+                 screen=None):
         self.bg = bg if bg else self.bg
         self.fg = fg if fg else self.fg
         self.fonts = fonts if fonts else self.fonts
         self.padding = padding if padding else self.padding
-        self.refresh = refresh if refresh else self.refresh
-        self.panel = panel
+        if refresh:
+            self._refresh = refresh
+        self.screen = screen if screen else self.screen
 
 
 class TextWidget(Widget):
@@ -86,7 +98,7 @@ class TextWidget(Widget):
 
     def update(self):
         new_content = self.decorate_with_self_attributes(self.text)
-        self._update_panel(new_content)
+        self._update_screen(new_content)
 
     def start(self):
         self.update()
@@ -100,6 +112,6 @@ class ThreadedWidget(Widget):
 
     def start(self):
         if self.refresh == 0:
-            self.refresh = self.panel.refresh
+            self.refresh = self.screen.refresh
         t = threading.Thread(target=self.update)
         t.start()
