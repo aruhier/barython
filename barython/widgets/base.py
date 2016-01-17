@@ -71,7 +71,7 @@ class Widget():
 
         return self.decorate(text, **d_kwargs)
 
-    def _update_screen(self, new_content):
+    def _update_screens(self, new_content):
         """
         If content has changed, request the screen update
         """
@@ -101,7 +101,7 @@ class TextWidget(Widget):
 
     def update(self):
         new_content = self.decorate_with_self_attributes(self.text)
-        self._update_screen(new_content)
+        self._update_screens(new_content)
 
     def start(self):
         self.update()
