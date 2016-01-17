@@ -46,13 +46,11 @@ class Widget():
         :param padding: padding around the text
         :param font: index of font to use
         """
-        return (9*"{}").format(
+        return (7*"{}").format(
             "%{{B{}}}".format(bg) if fg else "",
             "%{{F{}}}".format(fg) if fg else "",
             "%{{T{}}}".format(font) if font else "",
-            " " * padding,
-            text,
-            " " * padding,
+            text.center(len(text) + 2*padding),
             "%{{T-}}".format(font) if font else "",
             "%{F-}" if fg else "",
             "%{B-}" if bg else ""
