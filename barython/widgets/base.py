@@ -82,15 +82,15 @@ class Widget():
     def update(self):
         pass
 
-    def __init__(self, bg=None, fg=None, padding=0, fonts=None, refresh=0,
-                 screen=None):
-        self.bg = bg if bg else self.bg
-        self.fg = fg if fg else self.fg
-        self.fonts = fonts if fonts else self.fonts
-        self.padding = padding if padding else self.padding
-        if refresh:
+    def __init__(self, bg=None, fg=None, padding=None, fonts=None,
+                 refresh=None, screen=None):
+        self.bg = self.bg if bg is None else bg
+        self.fg = self.fg if fg is None else fg
+        self.fonts = self.fonts if fonts is None else fonts
+        self.padding = self.padding if padding is None else padding
+        if refresh is not None:
             self._refresh = refresh
-        self.screen = screen if screen else self.screen
+        self.screen = self.screen if screen is None else self.screen
 
 
 class TextWidget(Widget):
@@ -105,7 +105,7 @@ class TextWidget(Widget):
 
     def __init__(self, text=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.text = self.text if text is None else self.text
+        self.text = self.text if text is None else text
 
 
 class ThreadedWidget(Widget):

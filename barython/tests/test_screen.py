@@ -1,6 +1,7 @@
 
 import pytest
 
+from barython.panel import Panel
 from barython.screen import Screen
 from barython.widgets.base import Widget
 
@@ -8,6 +9,20 @@ from barython.widgets.base import Widget
 def test_screen():
     s = Screen()
     s.run()
+
+
+def test_screen_refresh():
+    s = Screen(refresh=0)
+    assert s.refresh == 0
+
+    s.refresh = 1
+    assert s.refresh == 1
+
+    p = Panel(refresh=2)
+    s.refresh = 0
+    s.panel = p
+    assert s.refresh == p.refresh
+    assert s.refresh == 2
 
 
 def test_screen_add_widget():
