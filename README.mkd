@@ -1,0 +1,24 @@
+Barython [WORK IN PROGRESS]
+===========================
+
+Configures Lemonboys's bar and brings some widgets in trying to stay
+performance friendly. Handles multiple screen and is focused to be BSPWM
+compatible.
+
+The project is not functionnal yet.
+
+Installation
+------------
+
+Just run:
+
+```
+pip3 -e . install
+```
+
+
+License
+-------
+
+Tool under the BSD license. Do not hesitate to report bugs, ask me some
+questions or do some pull request if you want to !

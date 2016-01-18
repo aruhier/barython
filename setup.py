@@ -15,7 +15,7 @@ setup(
 
     description="Pipe informations to lemonboy's bar",
 
-    # url="https://github.com/Anthony25/barython",
+    url="https://github.com/Anthony25/barython",
     author="Anthony25 <Anthony Ruhier>",
     author_email="anthony.ruhier@gmail.com",
 
