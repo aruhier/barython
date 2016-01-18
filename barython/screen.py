@@ -15,7 +15,7 @@ class Screen():
     _widgets_barrier = None
     #: refresh rate
     _refresh = 0
-    #: screen size
+    #: screen size, in a tuple (x, y)
     _size = None
     #: screen name
     name = None
@@ -38,10 +38,13 @@ class Screen():
 
     @property
     def size(self):
+        """
+        Return the screen size in a tuple
+        """
         if self._size:
             return self._size
         else:
-            # TODO: shoud compute the screen size
+            # TODO: should compute the screen size
             return None
 
     @size.setter
@@ -81,6 +84,11 @@ class Screen():
         )
 
     def init_bar(self):
+        """
+        Spawn lemonbar and store the pipe in self._bar
+
+        Before starting, tries to terminate self._bar in case of refresh
+        """
         try:
             self._bar.terminate()
         except:
@@ -100,12 +108,29 @@ class Screen():
         )
 
     def update(self):
+        """
+        Ask to redraw the screen or the global panel
+
+        If more than one widget is waiting for the barrier, it is meaningless
+        to wait too (because its value will be taken in account by the update
+        ran by the waiting widget).
+        A sleep is launched at the end to respect the refresh rate set for this
+        Screen.
+        """
         if self._widgets_barrier.n_waiting <= 1:
             self._widgets_barrier.wait()
             self.draw()
             time.sleep(self.refresh)
 
     def run(self):
+        """
+        Run the screen panel
+
+        If the global panel set that there might be one instance per screen,
+        starts a local lemonbar.
+        Starts all widgets in there own threads. They will callback a screen
+        update in case of any change.
+        """
         if self.panel.instance_per_screen:
             self.init_bar()
 

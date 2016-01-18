@@ -11,6 +11,9 @@ def test_screen():
 
 
 def test_screen_refresh():
+    """
+    Test if a Screen object get the refresh of its panel if not set
+    """
     s = Screen(refresh=0)
     assert s.refresh == 0
 
@@ -25,6 +28,9 @@ def test_screen_refresh():
 
 
 def test_screen_add_widget():
+    """
+    Test to add a widget in different alignments
+    """
     s = Screen()
 
     w = Widget()
@@ -70,6 +76,9 @@ def test_screen_gather():
 
 
 def test_screen_gather_multiple_widgets():
+    """
+    Test the gather function with more than one widget
+    """
     s = Screen()
     w = TextWidget(text="test")
     w1 = TextWidget(text="test1")
