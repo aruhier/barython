@@ -4,6 +4,8 @@
 class Panel():
     #: launch one bar per screen or use only one with %{S+}
     instance_per_screen = True
+    #: command for lemonbar
+    bar_cmd = "lemonbar"
     #: refresh rate
     refresh = 0.1
     #: screens attached to this panel

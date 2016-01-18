@@ -7,8 +7,7 @@ from barython.widgets.base import Widget, TextWidget
 
 
 def test_screen():
-    s = Screen()
-    s.run()
+    Screen()
 
 
 def test_screen_refresh():

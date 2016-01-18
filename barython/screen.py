@@ -5,6 +5,8 @@ import itertools
 import threading
 import time
 
+from barython import tools
+
 
 class Screen():
     #: widgets to show on this screen
@@ -13,8 +15,14 @@ class Screen():
     _widgets_barrier = None
     #: refresh rate
     _refresh = 0
-    #: screen
+    #: screen size
+    _size = None
+    #: screen name
     name = None
+    fg = None
+    bg = None
+    fonts = None
+    offset = None
     panel = None
 
     @property
@@ -27,6 +35,18 @@ class Screen():
     @refresh.setter
     def refresh(self, value):
         self._refresh = value
+
+    @property
+    def size(self):
+        if self._size:
+            return self._size
+        else:
+            # TODO: shoud compute the screen size
+            return None
+
+    @size.setter
+    def size(self, value):
+        self._size = value
 
     def add_widget(self, alignment, *widgets, index=None):
         """
@@ -60,6 +80,25 @@ class Screen():
             ) for alignment, widgets in self._widgets.items() if widgets
         )
 
+    def init_bar(self):
+        try:
+            self._bar.terminate()
+        except:
+            pass
+        screen_size = self.size
+        if screen_size:
+            geometry = "{}x{}+{}+{}".format(
+                screen_size[0] - self.offset[0],
+                screen_size[1] - self.offset[1],
+                *self.offset[2:]
+            )
+        else:
+            geometry = None
+        self._bar = tools.lemonbar(
+            bar_cmd=self.panel.bar_cmd, geometry=geometry, fonts=self.fonts,
+            fg=self.fg, bg=self.bg
+        )
+
     def update(self):
         if self._widgets_barrier.n_waiting <= 1:
             self._widgets_barrier.wait()
@@ -67,16 +106,22 @@ class Screen():
             time.sleep(self.refresh)
 
     def run(self):
+        if self.panel.instance_per_screen:
+            self.init_bar()
+
         thread_pool = []
         for widget in itertools.chain(*self._widgets.values()):
             thread_pool.append(threading.Thread(
                 target=widget.update, daemon=True
             ))
 
-    def __init__(self, name=None, refresh=None, panel=None):
+    def __init__(self, name=None, refresh=None, offset=None, panel=None):
         self.name = self.name if name is None else name
         if refresh:
             self._refresh = refresh
         self.panel = self.panel if panel is None else panel
+        self.offset = self.offset if offset is None else offset
+        if self.offset is None:
+            self.offset = (0, 0, 0, 0)
         self._widgets = OrderedDict([("l", []), ("c", []), ("r", [])])
         self._widgets_barrier = threading.Barrier(1)
