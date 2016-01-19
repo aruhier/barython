@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 import itertools
+import logging
 import threading
 import time
 import xcffib
@@ -9,6 +10,9 @@ import xcffib.xproto
 import xcffib.randr
 
 from barython import tools
+
+
+logger = logging.getLogger("barython")
 
 
 def get_randr_screens():
@@ -32,8 +36,10 @@ def get_randr_screens():
             info = cookie.reply()
             if info:
                 outputs[name] = (info.width, info.height, info.x, info.y)
-        except:
-            pass
+        except Exception as e:
+            logger.debug("Error when trying to fetch screens infos")
+            logger.debug(e)
+            continue
     return outputs
 
 
@@ -44,8 +50,8 @@ class Screen():
     _widgets_barrier = None
     #: refresh rate
     _refresh = 0
-    #: screen size, in a tuple (x, y)
-    _size = None
+    #: screen geometry, in a tuple (x, y)
+    _geometry = None
     #: screen name
     name = None
     fg = None
@@ -66,19 +72,24 @@ class Screen():
         self._refresh = value
 
     @property
-    def size(self):
+    def geometry(self):
         """
-        Return the screen size in a tuple
+        Return the screen geometry in a tuple
         """
-        if self._size:
-            return self._size
+        if self._geometry:
+            return self._geometry
         else:
-            # TODO: should compute the screen size
-            return None
+            self._geometry = get_randr_screens().get(self.name, None)
+            if self._geometry is None:
+                logger.error(
+                    "Properties of screen {} could not be fetched. Please "
+                    "specify the geometry manually."
+                )
+            return self._geometry
 
-    @size.setter
-    def size(self, value):
-        self._size = value
+    @geometry.setter
+    def geometry(self, value):
+        self._geometry = value
 
     def add_widget(self, alignment, *widgets, index=None):
         """
@@ -122,11 +133,11 @@ class Screen():
             self._bar.terminate()
         except:
             pass
-        screen_size = self.size
-        if screen_size:
+        screen_geometry = self.geometry
+        if screen_geometry:
             geometry = "{}x{}+{}+{}".format(
-                screen_size[0] - self.offset[0],
-                screen_size[1] - self.offset[1],
+                screen_geometry[0] - self.offset[0],
+                screen_geometry[1] - self.offset[1],
                 *self.offset[2:]
             )
         else:

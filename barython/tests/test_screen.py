@@ -4,6 +4,7 @@ import pytest
 from barython.panel import Panel
 from barython.screen import Screen
 from barython.widgets.base import Widget, TextWidget
+import barython.screen
 
 
 def test_screen():
@@ -63,6 +64,16 @@ def test_screen_add_widget_insert():
 
     assert s._widgets["l"][0] == w1
     assert s._widgets["l"][1] == w2
+
+
+def test_screen_geometry(monkeypatch):
+    def mock_get_randr_screens(*args, **kwargs):
+        return {"DVI-I-0": (1920, 1080, 50, 60)}
+
+    monkeypatch.setattr(barython.screen, "get_randr_screens",
+                        mock_get_randr_screens)
+    s = Screen(name="DVI-I-0")
+    assert s.geometry == (1920, 1080, 50, 60)
 
 
 def test_screen_gather():
