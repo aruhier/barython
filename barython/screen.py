@@ -4,8 +4,37 @@ from collections import OrderedDict
 import itertools
 import threading
 import time
+import xcffib
+import xcffib.xproto
+import xcffib.randr
 
 from barython import tools
+
+
+def get_randr_screens():
+    conn = xcffib.connect()
+    conn.randr = conn(xcffib.randr.key)
+
+    window = conn.get_setup().roots[0].root
+    resources = conn.randr.GetScreenResourcesCurrent(window).reply()
+    outputs = {}
+
+    for rroutput in resources.outputs:
+        try:
+            cookie = conn.randr.GetOutputInfo(
+                rroutput, resources.config_timestamp
+            )
+            info = cookie.reply()
+            name = "".join(map(chr, info.name))
+            cookie = conn.randr.GetCrtcInfo(
+                info.crtc, resources.config_timestamp
+            )
+            info = cookie.reply()
+            if info:
+                outputs[name] = (info.width, info.height, info.x, info.y)
+        except:
+            pass
+    return outputs
 
 
 class Screen():
