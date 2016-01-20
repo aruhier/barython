@@ -50,6 +50,20 @@ def test_screen_add_widget():
     assert next(iter(w.screens)) == s
 
 
+def test_screen_add_widget_bad_alignment():
+    """
+    Test to add a widget in different alignments
+    """
+    s = Screen()
+    w = Widget()
+
+    with pytest.raises(ValueError):
+        s.add_widget(w)
+
+    with pytest.raises(ValueError):
+        s.add_widget("v", w)
+
+
 def test_screen_add_widget_insert():
     """
     Test to add widget before specified index
@@ -77,7 +91,9 @@ def test_screen_geometry(monkeypatch):
 
 
 def test_screen_gather():
+    p = Panel()
     s = Screen()
+    p.add_screen(s)
     w = TextWidget(text="test")
     s.add_widget("l", w)
     w.update()
@@ -90,7 +106,9 @@ def test_screen_gather_multiple_widgets():
     """
     Test the gather function with more than one widget
     """
+    p = Panel()
     s = Screen()
+    p.add_screen(s)
     w = TextWidget(text="test")
     w1 = TextWidget(text="test1")
     s.add_widget("l", w, w1)

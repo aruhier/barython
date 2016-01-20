@@ -52,6 +52,7 @@ class Screen():
     _refresh = 0
     #: screen geometry, in a tuple (x, y)
     _geometry = None
+    _stop = False
     #: screen name
     name = None
     fg = None
@@ -100,6 +101,8 @@ class Screen():
         :param index: if set, will insert the widgets before the specified
                       index (default: None)
         """
+        if alignment not in self._widgets.keys():
+            raise ValueError("'alignement' might be either 'l', 'c' or 'r'")
         if index is None:
             self._widgets[alignment].extend(widgets)
         else:
@@ -111,7 +114,18 @@ class Screen():
             w.screens.add(self)
 
     def draw(self):
-        pass
+        """
+        Draws the bar on the screen
+        """
+        def write_in_bar():
+            self._bar.stdin.write(self.gather().encode())
+            self._bar.stdin.flush()
+
+        try:
+            write_in_bar()
+        except (BrokenPipeError, AttributeError):
+            self.init_bar()
+            write_in_bar()
 
     def gather(self):
         """
@@ -129,11 +143,9 @@ class Screen():
 
         Before starting, tries to terminate self._bar in case of refresh
         """
-        try:
-            self._bar.terminate()
-        except:
-            pass
+        self.stop_bar()
         screen_geometry = self.geometry
+        # TODO: the bar height IS NOT the screen height
         if screen_geometry:
             geometry = "{}x{}+{}+{}".format(
                 screen_geometry[0] - self.offset[0],
@@ -146,6 +158,18 @@ class Screen():
             bar_cmd=self.panel.bar_cmd, geometry=geometry, fonts=self.fonts,
             fg=self.fg, bg=self.bg
         )
+
+    def stop_bar(self, kill=False):
+        """
+        Terminates or kill the bar
+        """
+        try:
+            if kill:
+                self._bar.kill()
+            else:
+                self._bar.terminate()
+        except:
+            pass
 
     def update(self):
         """
@@ -177,8 +201,17 @@ class Screen():
         thread_pool = []
         for widget in itertools.chain(*self._widgets.values()):
             thread_pool.append(threading.Thread(
-                target=widget.update, daemon=True
+                target=widget.update
             ))
+        # TODO: find a cleaner solution
+        while not self._stop:
+            time.sleep(self.refresh)
+
+    def stop(self):
+        """
+        Stop the screen
+        """
+        self._stop = True
 
     def __init__(self, name=None, refresh=None, offset=None, panel=None):
         self.name = self.name if name is None else name
