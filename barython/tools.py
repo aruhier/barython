@@ -13,7 +13,7 @@ def lemonbar(bar_cmd="lemonbar", geometry=None, fonts=None, fg=None, bg=None,
     Spawn a subprocess of lemonbar
 
     :param bar_cmd: path of command for lemonbar (default: lemonbar)
-    :param geometry: -g option value
+    :param geometry: -g option value, or a tuple of width, heigh, x, y
     :param fonts: list of fonts
     :param fg: foreground value
     :param bg: background value
@@ -21,17 +21,23 @@ def lemonbar(bar_cmd="lemonbar", geometry=None, fonts=None, fg=None, bg=None,
     :param others: list of additional options to join to the command
     """
     cmd = [bar_cmd, ]
-    if geometry:
-        cmd.extend(["-g", geometry])
+    if geometry and isinstance(geometry, str):
+        cmd.extend(("-g", geometry))
+    elif geometry:
+        w, h, x, y = (
+            [i if i is not None else "" for i in geometry] +
+            ["", ]*(4 - len(geometry))
+        )
+        cmd.extend(("-g", "{}x{}+{}+{}".format(w, h, x, y)))
     if fonts:
         for f in fonts:
-            cmd.extend(["-f", f])
+            cmd.extend(("-f", f))
     if fg:
-        cmd.extend(["-F", fg])
+        cmd.extend(("-F", fg))
     if bg:
-        cmd.extend(["-B", bg])
+        cmd.extend(("-B", bg))
     if clickable:
-        cmd.extend(["-a", clickable])
+        cmd.extend(("-a", clickable))
     if others:
         cmd.extend(others)
     logging.debug("Launch {}".format(cmd))
