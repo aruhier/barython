@@ -148,15 +148,15 @@ class Screen():
         """
         self.stop_bar()
         screen_geometry = self.geometry
-        # TODO: the bar height IS NOT the screen height
         if screen_geometry:
-            geometry = "{}x{}+{}+{}".format(
-                screen_geometry[0] - self.offset[0],
-                screen_geometry[1] - self.offset[1],
-                *self.offset[2:]
-            )
+            w, h, x, y = screen_geometry
+            w -= self.offset[0] + self.offset[1]
+            h = self.height
+            x += self.offset[0]
+            y += self.offset[2] - self.offset[3]
+            geometry = (w, h, x, y)
         else:
-            geometry = None
+            geometry = (None, self.height)
         self._bar = tools.lemonbar(
             bar_cmd=self.panel.bar_cmd, geometry=geometry, fonts=self.fonts,
             fg=self.fg, bg=self.bg

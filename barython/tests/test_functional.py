@@ -11,7 +11,7 @@ def test_empty_bar():
     """
     try:
         p = Panel()
-        s = Screen()
+        s = Screen(height=30)
         p.add_screen(s)
 
         w = TextWidget("Test")
