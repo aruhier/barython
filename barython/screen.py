@@ -140,6 +140,21 @@ class Screen():
             ) for alignment, widgets in self._widgets.items() if widgets
         )
 
+    def update(self):
+        """
+        Ask to redraw the screen or the global panel
+
+        If more than one widget is waiting for the barrier, it is meaningless
+        to wait too (because its value will be taken in account by the update
+        ran by the waiting widget).
+        A sleep is launched at the end to respect the refresh rate set for this
+        Screen.
+        """
+        if self._widgets_barrier.n_waiting <= 1:
+            self._widgets_barrier.wait()
+            self.draw()
+            time.sleep(self.refresh)
+
     def init_bar(self):
         """
         Spawn lemonbar and store the pipe in self._bar
@@ -162,36 +177,9 @@ class Screen():
             fg=self.fg, bg=self.bg
         )
 
-    def stop_bar(self, kill=False):
+    def start(self):
         """
-        Terminates or kill the bar
-        """
-        try:
-            if kill:
-                self._bar.kill()
-            else:
-                self._bar.terminate()
-        except:
-            pass
-
-    def update(self):
-        """
-        Ask to redraw the screen or the global panel
-
-        If more than one widget is waiting for the barrier, it is meaningless
-        to wait too (because its value will be taken in account by the update
-        ran by the waiting widget).
-        A sleep is launched at the end to respect the refresh rate set for this
-        Screen.
-        """
-        if self._widgets_barrier.n_waiting <= 1:
-            self._widgets_barrier.wait()
-            self.draw()
-            time.sleep(self.refresh)
-
-    def run(self):
-        """
-        Run the screen panel
+        Start the screen panel
 
         If the global panel set that there might be one instance per screen,
         starts a local lemonbar.
@@ -205,12 +193,24 @@ class Screen():
         thread_pool = []
         for widget in itertools.chain(*self._widgets.values()):
             thread_pool.append(threading.Thread(
-                target=widget.update
+                target=widget.start
             ))
         # TODO: find a cleaner solution
         while not self._stop:
             time.sleep(self.refresh)
         self._bar.terminate()
+
+    def stop_bar(self, kill=False):
+        """
+        Terminates or kill the bar
+        """
+        try:
+            if kill:
+                self._bar.kill()
+            else:
+                self._bar.terminate()
+        except:
+            pass
 
     def stop(self):
         """

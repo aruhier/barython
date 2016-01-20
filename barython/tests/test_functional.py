@@ -18,6 +18,6 @@ def test_empty_bar():
         s.add_widget("l", w)
         s.fg = "#FF000000"
         s.bg = "#FFFFFFFF"
-        s.run()
+        s.start()
     except KeyboardInterrupt:
         s.stop()
