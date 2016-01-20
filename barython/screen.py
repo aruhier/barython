@@ -187,7 +187,6 @@ class Screen():
             bar_cmd=self.panel.bar_cmd, geometry=geometry, fonts=self.fonts,
             fg=self.fg, bg=self.bg
         )
-        signal.signal(signal.SIGINT, self.stop)
 
     def start(self):
         """
@@ -199,6 +198,10 @@ class Screen():
         update in case of any change.
         """
         self._stop.clear()
+        try:
+            signal.signal(signal.SIGINT, self.stop)
+        except ValueError:
+            pass
         if self.panel.instance_per_screen:
             self.init_bar()
 
