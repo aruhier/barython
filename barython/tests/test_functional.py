@@ -11,13 +11,13 @@ def test_empty_bar():
     """
     try:
         p = Panel()
-        s = Screen(height=30)
+        s = Screen()
+        s.fg = "#FFFFFFFF"
+        s.bg = "#FF000000"
         p.add_screen(s)
-
-        w = TextWidget("Test")
-        s.add_widget("l", w)
-        s.fg = "#FF000000"
-        s.bg = "#FFFFFFFF"
+        w = TextWidget(text="test")
+        w1 = TextWidget(text="test1")
+        s.add_widget("l", w, w1)
         s.start()
     except KeyboardInterrupt:
         s.stop()

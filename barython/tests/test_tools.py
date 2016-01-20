@@ -1,6 +1,10 @@
 
 from barython.tools import lemonbar
+import logging
 import subprocess
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_lemonbar(monkeypatch):

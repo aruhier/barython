@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import itertools
 import logging
+import signal
 import threading
 import time
 import xcffib
@@ -47,12 +48,14 @@ class Screen():
     #: widgets to show on this screen
     _widgets = None
     #: used to limit the update
-    _widgets_barrier = None
+    _update_lock = None
+    _refresh_lock = None
+    #: event to stop the screen
+    _stop = None
     #: refresh rate
     _refresh = 0
     #: bar geometry, in a tuple (x, y, position_x, position_y)
     _geometry = None
-    _stop = False
     #: screen name
     name = None
     fg = None
@@ -121,12 +124,15 @@ class Screen():
         Draws the bar on the screen
         """
         def write_in_bar():
-            self._bar.stdin.write(self.gather().encode())
+            content = (self.gather() + "\n").encode()
+            self._bar.stdin.write(content)
+            logger.debug("Writing {}".format(content))
             self._bar.stdin.flush()
 
         try:
             write_in_bar()
         except (BrokenPipeError, AttributeError):
+            logger.info("Lemonbar is off, init it")
             self.init_bar()
             write_in_bar()
 
@@ -150,10 +156,15 @@ class Screen():
         A sleep is launched at the end to respect the refresh rate set for this
         Screen.
         """
-        if self._widgets_barrier.n_waiting <= 1:
-            self._widgets_barrier.wait()
+        locked = self._refresh_lock.acquire(blocking=False)
+        # More than 2 threads are already here, doesn't make any sense to wait
+        # because the screen will be updated
+        if locked is False:
+            return
+        with self._update_lock:
             self.draw()
             time.sleep(self.refresh)
+        self._refresh_lock.release()
 
     def init_bar(self):
         """
@@ -176,6 +187,7 @@ class Screen():
             bar_cmd=self.panel.bar_cmd, geometry=geometry, fonts=self.fonts,
             fg=self.fg, bg=self.bg
         )
+        signal.signal(signal.SIGINT, self.stop)
 
     def start(self):
         """
@@ -186,19 +198,16 @@ class Screen():
         Starts all widgets in there own threads. They will callback a screen
         update in case of any change.
         """
-        self._stop = False
+        self._stop.clear()
         if self.panel.instance_per_screen:
             self.init_bar()
 
-        thread_pool = []
         for widget in itertools.chain(*self._widgets.values()):
-            thread_pool.append(threading.Thread(
+            threading.Thread(
                 target=widget.start
-            ))
-        # TODO: find a cleaner solution
-        while not self._stop:
-            time.sleep(self.refresh)
-        self._bar.terminate()
+            ).start()
+
+        self._stop.wait()
 
     def stop_bar(self, kill=False):
         """
@@ -212,11 +221,12 @@ class Screen():
         except:
             pass
 
-    def stop(self):
+    def stop(self, *args, **kwargs):
         """
         Stop the screen
         """
-        self._stop = True
+        self._stop.set()
+        self.stop_bar()
 
     def __init__(self, name=None, refresh=None, offset=None, height=None,
                  geometry=None, panel=None):
@@ -228,5 +238,8 @@ class Screen():
         self.offset = self.offset if offset is None else offset
         if self.offset is None:
             self.offset = (0, 0, 0, 0)
+        self.geometry = geometry
         self._widgets = OrderedDict([("l", []), ("c", []), ("r", [])])
-        self._widgets_barrier = threading.Barrier(1)
+        self._update_lock = threading.Lock()
+        self._refresh_lock = threading.Semaphore(2)
+        self._stop = threading.Event()
