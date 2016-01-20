@@ -195,6 +195,7 @@ class Screen():
         Starts all widgets in there own threads. They will callback a screen
         update in case of any change.
         """
+        self._stop = False
         if self.panel.instance_per_screen:
             self.init_bar()
 
@@ -206,6 +207,7 @@ class Screen():
         # TODO: find a cleaner solution
         while not self._stop:
             time.sleep(self.refresh)
+        self._bar.terminate()
 
     def stop(self):
         """
