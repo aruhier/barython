@@ -4,17 +4,20 @@
 import signal
 import threading
 
+from barython import _BarSpawner
 
-class Panel():
+
+class Panel(_BarSpawner):
     #: launch one bar per screen or use only one with %{S+}
     instance_per_screen = True
     #: command for lemonbar
     bar_cmd = "lemonbar"
+    #: geometry
+    geometry = None
     #: refresh rate
     refresh = 0.1
     #: screens attached to this panel
     _screens = None
-    _stop = None
 
     def add_screen(self, *screens, index=None):
         """
@@ -35,12 +38,22 @@ class Panel():
         for s in self._screens:
             s.panel = self
 
+    def gather(self):
+        """
+        Gather all widgets content
+        """
+        return "%{S+}".join(
+             screen.gather() for screen in self._screens
+        )
+
     def start(self):
         self._stop.clear()
         try:
             signal.signal(signal.SIGINT, self.stop)
         except ValueError:
             pass
+        if not self.instance_per_screen:
+            self.init_bar()
         for screen in self._screens:
             threading.Thread(
                 target=screen.start
@@ -49,15 +62,14 @@ class Panel():
         for screen in self._screens:
             screen.stop()
 
-    def stop(self, *args, **kwargs):
-        """
-        Stop the screen
-        """
-        self._stop.set()
-
-    def __init__(self, refresh=None, screens=None):
+    def __init__(self, instance_per_screen=None, geometry=None, refresh=None,
+                 screens=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance_per_screen = (self.refresh
+                                    if instance_per_screen is None
+                                    else instance_per_screen)
         self.refresh = self.refresh if refresh is None else refresh
         self._screens = self._screens if screens is None else screens
         if not self._screens:
             self._screens = []
-        self._stop = threading.Event()
+        self.geometry = self.geometry if geometry is None else geometry

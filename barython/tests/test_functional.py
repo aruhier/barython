@@ -26,6 +26,26 @@ def test_empty_bar():
 
 
 @pytest.mark.needs_lemonbar
+def test_empty_global_bar():
+    """
+    Test an empty bar
+    """
+    p = Panel(instance_per_screen=False)
+    p.fg = "#FFFFFFFF"
+    p.bg = "#FF000000"
+    s = Screen()
+    p.add_screen(s)
+    w = TextWidget(text="test")
+    w1 = TextWidget(text="test1")
+    s.add_widget("l", w, w1)
+
+    try:
+        s.start()
+    except KeyboardInterrupt:
+        s.stop()
+
+
+@pytest.mark.needs_lemonbar
 def test_bar_per_screen():
     """
     Test an empty bar
