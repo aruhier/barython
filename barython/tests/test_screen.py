@@ -86,8 +86,8 @@ def test_screen_geometry(monkeypatch):
 
     monkeypatch.setattr(barython.screen, "get_randr_screens",
                         mock_get_randr_screens)
-    s = Screen(name="DVI-I-0")
-    assert s.geometry == (1920, 1080, 50, 60)
+    s = Screen(name="DVI-I-0", height=20)
+    assert s.geometry == (1920, 20, 50, 60)
 
 
 def test_screen_gather():

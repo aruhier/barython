@@ -50,7 +50,7 @@ class Screen():
     _widgets_barrier = None
     #: refresh rate
     _refresh = 0
-    #: screen geometry, in a tuple (x, y)
+    #: bar geometry, in a tuple (x, y, position_x, position_y)
     _geometry = None
     _stop = False
     #: screen name
@@ -58,6 +58,7 @@ class Screen():
     fg = None
     bg = None
     fonts = None
+    height = 18
     offset = None
     panel = None
 
@@ -80,8 +81,10 @@ class Screen():
         if self._geometry:
             return self._geometry
         else:
-            self._geometry = get_randr_screens().get(self.name, None)
-            if self._geometry is None:
+            try:
+                x, y, px, py = get_randr_screens().get(self.name, None)
+                self._geometry = (x, self.height, px, py)
+            except (ValueError, TypeError):
                 logger.error(
                     "Properties of screen {} could not be fetched. Please "
                     "specify the geometry manually."
@@ -215,11 +218,13 @@ class Screen():
         """
         self._stop = True
 
-    def __init__(self, name=None, refresh=None, offset=None, panel=None):
+    def __init__(self, name=None, refresh=None, offset=None, height=None,
+                 geometry=None, panel=None):
         self.name = self.name if name is None else name
         if refresh:
             self._refresh = refresh
         self.panel = self.panel if panel is None else panel
+        self.height = self.height if height is None else height
         self.offset = self.offset if offset is None else offset
         if self.offset is None:
             self.offset = (0, 0, 0, 0)
