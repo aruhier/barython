@@ -28,7 +28,7 @@ class Widget():
 
     @property
     def refresh(self):
-        if self._refresh == 0 and self.screen is not None:
+        if self._refresh == 0 and self.screens is not None:
             return min([screen.refresh for screen in self.screens])
         else:
             return self._refresh
@@ -110,9 +110,11 @@ class TextWidget(Widget):
 
 
 class ThreadedWidget(Widget):
+    def update(self, new_content=None, *args, **kwargs):
+        threading.Thread(
+            target=self._update_screens, args=(new_content,)
+        ).start()
 
     def start(self):
-        if self.refresh == 0:
-            self.refresh = self.screen.refresh
         t = threading.Thread(target=self.update)
         t.start()

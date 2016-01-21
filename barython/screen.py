@@ -143,7 +143,7 @@ class Screen(_BarSpawner):
 
         for widget in itertools.chain(*self._widgets.values()):
             threading.Thread(
-                target=widget.start
+                target=widget.start, daemon=True
             ).start()
 
         self._stop.wait()

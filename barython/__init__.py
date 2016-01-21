@@ -77,7 +77,7 @@ class _BarSpawner():
             w -= self.offset[0] + self.offset[1]
             h = self.height
             x += self.offset[0]
-            y += self.offset[2] - self.offset[3]
+            y += self.offset[2]
             geometry = (w, h, x, y)
         else:
             geometry = (None, self.height)
@@ -114,7 +114,7 @@ class _BarSpawner():
         self.height = self.height if height is None else height
         self.offset = self.offset if offset is None else offset
         if self.offset is None:
-            self.offset = (0, 0, 0, 0)
+            self.offset = (0, 0, 0)
         self.geometry = geometry
         self.fg = self.fg if fg is None else fg
         self.bg = self.bg if bg is None else bg
