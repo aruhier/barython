@@ -110,11 +110,18 @@ class TextWidget(Widget):
 
 
 class ThreadedWidget(Widget):
+    lock_start = None
+
     def update(self, new_content=None, *args, **kwargs):
         threading.Thread(
             target=self._update_screens, args=(new_content,)
         ).start()
 
     def start(self):
-        t = threading.Thread(target=self.update)
-        t.start()
+        with self.lock_start:
+            t = threading.Thread(target=self.update)
+            t.start()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lock_start = threading.Lock()
