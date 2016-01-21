@@ -30,4 +30,4 @@ def safe_import(module_name, class_name):
         logger.debug(traceback.format_exc())
 
 
-# safe_import(".date", "Date")
+safe_import(".clock", "Clock")
