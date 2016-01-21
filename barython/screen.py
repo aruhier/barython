@@ -72,14 +72,14 @@ class Screen(_BarSpawner):
         """
         if self._geometry:
             return self._geometry
-        else:
+        elif self.name:
             try:
                 x, y, px, py = get_randr_screens().get(self.name, None)
                 self._geometry = (x, self.height, px, py)
             except (ValueError, TypeError):
                 logger.error(
                     "Properties of screen {} could not be fetched. Please "
-                    "specify the geometry manually."
+                    "specify the geometry manually.".format(self.name)
                 )
             return self._geometry
 
@@ -139,6 +139,8 @@ class Screen(_BarSpawner):
         except ValueError:
             pass
         if self.panel.instance_per_screen:
+            if self.name and self.geometry is None:
+                return
             self.init_bar()
 
         for widget in itertools.chain(*self._widgets.values()):
