@@ -41,4 +41,9 @@ def lemonbar(bar_cmd="lemonbar", geometry=None, fonts=None, fg=None, bg=None,
     if others:
         cmd.extend(others)
     logging.debug("Launch {}".format(cmd))
-    return subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    bar = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    try:
+        subprocess.Popen("bash", stdin=bar.stdout, stdout=subprocess.PIPE)
+    except AttributeError:
+        pass
+    return bar

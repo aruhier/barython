@@ -20,7 +20,9 @@ class Widget():
     #: padding
     padding = 0
     #: list of fonts index used
-    fonts = tuple()
+    fonts = None
+    #: dictionnary of actions
+    actions = None
 
     @property
     def content(self):
@@ -37,7 +39,8 @@ class Widget():
     def refresh(self, value):
         self._refresh = value
 
-    def decorate(self, text, fg=None, bg=None, padding=0, font=None):
+    def decorate(self, text, fg=None, bg=None, padding=0, font=None,
+                 actions=None):
         """
         Decorate a text with custom properties
 
@@ -45,15 +48,24 @@ class Widget():
         :param bg: background
         :param padding: padding around the text
         :param font: index of font to use
+        :param actions: dict of actions
         """
-        return (7*"{}").format(
+        try:
+            joined_actions = "".join(
+                "%{{A{}:{}:}}".format(a, cmd) for a, cmd in actions.items()
+            )
+        except (TypeError, AttributeError):
+            joined_actions = ""
+        return (9*"{}").format(
+            joined_actions,
             "%{{B{}}}".format(bg) if fg else "",
             "%{{F{}}}".format(fg) if fg else "",
             "%{{T{}}}".format(font) if font else "",
             text.center(len(text) + 2*padding),
             "%{{T-}}".format(font) if font else "",
             "%{F-}" if fg else "",
-            "%{B-}" if bg else ""
+            "%{B-}" if bg else "",
+            "%{A}" * len(actions) if actions else "",
         )
 
     def decorate_with_self_attributes(self, text, *args, **kwargs):
@@ -62,9 +74,11 @@ class Widget():
         """
         d_kwargs = {
             "fg": self.fg, "bg": self.bg, "padding": self.padding,
-            "font": self.fonts[0] if self.fonts else None, **kwargs
+            "font": self.fonts[0] if self.fonts else None,
+            "actions": self.actions, **kwargs
         }
-        for parameter, value in zip(("fg", "bg", "padding", "font"), args):
+        for parameter, value in zip(("fg", "bg", "padding", "font", "actions"),
+                                    args):
             d_kwargs[parameter] = value
 
         return self.decorate(text, **d_kwargs)
@@ -82,10 +96,15 @@ class Widget():
         pass
 
     def __init__(self, bg=None, fg=None, padding=None, fonts=None,
-                 refresh=None, screens=None):
+                 actions=None, refresh=None, screens=None):
         self.bg = self.bg if bg is None else bg
         self.fg = self.fg if fg is None else fg
         self.fonts = self.fonts if fonts is None else fonts
+        if self.fonts is None:
+            self.fonts = tuple()
+        self.actions = self.actions if actions is None else actions
+        if self.actions is None:
+            self.actions = dict()
         self.padding = self.padding if padding is None else padding
         if refresh is not None:
             self._refresh = refresh

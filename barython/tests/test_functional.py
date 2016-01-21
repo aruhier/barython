@@ -15,7 +15,7 @@ def test_empty_bar():
     s.fg = "#FFFFFFFF"
     s.bg = "#FF000000"
     p.add_screen(s)
-    w = TextWidget(text="test")
+    w = TextWidget(text="test", actions={1: "urxvt&"})
     w1 = TextWidget(text="test1")
     s.add_widget("l", w, w1)
 

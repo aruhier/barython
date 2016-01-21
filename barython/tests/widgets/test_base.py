@@ -32,15 +32,16 @@ def test_base_widget_decorate():
     bg = "#FF9021"
     font = 1
     padding = 2
+    actions = {1: "firefox&", 3: "urxvt&"}
 
     decorated_text = w.decorate(
-        text, fg=fg, bg=bg, font=font, padding=padding
+        text, fg=fg, bg=bg, font=font, padding=padding, actions=actions
     )
     expected_result = (
-        "%{{B{}}}%{{F{}}}%{{T{}}}  {}  %{{T-}}%{{F-}}%{{B-}}".format(
-            bg, fg, font, text
-        )
-    )
+        "%{{A1:firefox&:}}%{{A3:urxvt&:}}%{{B{}}}%{{F{}}}%{{T{}}}"
+        "  {}  "
+        "%{{T-}}%{{F-}}%{{B-}}%{{A}}%{{A}}"
+    ).format(bg, fg, font, text)
     assert decorated_text == expected_result
 
 
@@ -51,7 +52,7 @@ def test_base_widget_decorate_self_attributes_empty():
     w = Widget()
     kwargs = {
         "text": "test", "fg": "#FFFF11", "bg": "#FF9021", "font": 1,
-        "padding": 2,
+        "padding": 2, "actions": {1: "firefox", 3: "urxvt"},
     }
 
     assert w.decorate_with_self_attributes(**kwargs) == w.decorate(**kwargs)
