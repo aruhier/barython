@@ -114,7 +114,10 @@ class Screen(_BarSpawner):
         """
         return "".join(
             "%{{{}}}{}".format(
-                alignment, "".join([str(widget.content) for widget in widgets])
+                alignment, "".join([
+                    str(widget.content) if widget.content is not None
+                    else "" for widget in widgets
+                ])
             ) for alignment, widgets in self._widgets.items() if widgets
         )
 

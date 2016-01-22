@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
+import logging
+import shlex
+import subprocess
 import threading
+import time
+
+
+logger = logging.getLogger("barython")
 
 
 class Widget():
@@ -144,3 +151,44 @@ class ThreadedWidget(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lock_start = threading.Lock()
+
+
+class SubprocessWidget(ThreadedWidget):
+    """
+    Run a subprocess in a loop
+    """
+    #: command to run. Can be an iterable or a string
+    cmd = None
+    #: value for the subprocess.Popen shell parameter. Default to False
+    shell = False
+
+    def update(self, *args, **kwargs):
+        def init_subprocess(cmd):
+            if isinstance(cmd, str):
+                cmd = shlex.split(cmd)
+            return subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, shell=self.shell
+            )
+
+        subproc = init_subprocess(self.cmd)
+        while True:
+            try:
+                output = subproc.stdout.readline()
+                finished = subproc.poll()
+                if output != b"":
+                    new_content = self.decorate_with_self_attributes(
+                        output.decode().replace('\n', '').replace('\r', '')
+                    )
+                    super().update(new_content=new_content, *args, **kwargs)
+                if finished is not None:
+                    subproc = init_subprocess(self.cmd)
+            except Exception as e:
+                logger.error(e)
+                subproc = init_subprocess(self.cmd)
+            finally:
+                time.sleep(self.refresh)
+
+    def __init__(self, cmd=None, shell=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cmd = self.cmd if cmd is None else cmd
+        self.shell = self.shell if shell is None else shell

@@ -2,7 +2,8 @@
 import pytest
 from barython import Panel, Screen
 from barython.screen import get_randr_screens
-from barython.widgets.base import TextWidget
+from barython.widgets.base import TextWidget, SubprocessWidget
+from barython.widgets import ClockWidget
 
 
 @pytest.mark.needs_lemonbar
@@ -18,6 +19,13 @@ def test_empty_bar():
     w = TextWidget(text="test", actions={1: "urxvt&"})
     w1 = TextWidget(text="test1")
     s.add_widget("l", w, w1)
+
+    system_date_descr = TextWidget(text="Date by subprocess: ")
+    system_date = SubprocessWidget("/usr/bin/date", refresh=0.5)
+    s.add_widget("c", system_date_descr, system_date)
+
+    clock = ClockWidget()
+    s.add_widget("r", clock)
 
     try:
         s.start()
