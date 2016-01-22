@@ -12,6 +12,7 @@ def test_empty_bar():
     Test an empty bar
     """
     p = Panel()
+    p.refresh = 0.2
     s = Screen()
     s.fg = "#FFFFFFFF"
     s.bg = "#FF000000"
@@ -28,9 +29,9 @@ def test_empty_bar():
     s.add_widget("r", clock)
 
     try:
-        s.start()
+        p.start()
     except KeyboardInterrupt:
-        s.stop()
+        p.stop()
 
 
 @pytest.mark.needs_lemonbar
@@ -48,9 +49,9 @@ def test_empty_global_bar():
     s.add_widget("l", w, w1)
 
     try:
-        s.start()
+        p.start()
     except KeyboardInterrupt:
-        s.stop()
+        p.stop()
 
 
 @pytest.mark.needs_lemonbar

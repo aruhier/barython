@@ -148,10 +148,15 @@ class Screen(_BarSpawner):
 
         for widget in itertools.chain(*self._widgets.values()):
             threading.Thread(
-                target=widget.start, daemon=True
+                target=widget.start
             ).start()
 
         self._stop.wait()
+
+    def stop(self, *args, **kwargs):
+        super().stop(*args, **kwargs)
+        for widget in itertools.chain(*self._widgets.values()):
+            widget.stop()
 
     def __init__(self, name=None, refresh=None, geometry=None, panel=None,
                  *args, **kwargs):

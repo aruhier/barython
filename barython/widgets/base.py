@@ -102,6 +102,12 @@ class Widget():
     def update(self):
         pass
 
+    def start(self, *args, **kwargs):
+        pass
+
+    def stop(self, *args, **kwargs):
+        pass
+
     def __init__(self, bg=None, fg=None, padding=None, fonts=None,
                  actions=None, refresh=None, screens=None):
         self.bg = self.bg if bg is None else bg
@@ -137,6 +143,8 @@ class TextWidget(Widget):
 
 class ThreadedWidget(Widget):
     lock_start = None
+    #: event to stop the widget
+    _stop = None
 
     def update(self, new_content=None, *args, **kwargs):
         threading.Thread(
@@ -145,12 +153,17 @@ class ThreadedWidget(Widget):
 
     def start(self):
         with self.lock_start:
+            self._stop.clear()
             t = threading.Thread(target=self.update)
             t.start()
 
+    def stop(self):
+        self._stop.set()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.lock_start = threading.Lock()
+        self.lock_start = threading.Condition()
+        self._stop = threading.Event()
 
 
 class SubprocessWidget(ThreadedWidget):
@@ -171,7 +184,7 @@ class SubprocessWidget(ThreadedWidget):
             )
 
         subproc = init_subprocess(self.cmd)
-        while True:
+        while True and not self._stop.is_set():
             try:
                 output = subproc.stdout.readline()
                 finished = subproc.poll()
@@ -187,6 +200,7 @@ class SubprocessWidget(ThreadedWidget):
                 subproc = init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)
+        subproc.terminate()
 
     def __init__(self, cmd=None, shell=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -10,7 +10,7 @@ class ClockWidget(ThreadedWidget):
     date_format = "%c"
 
     def update(self, *args, **kwargs):
-        while True:
+        while True and not self._stop.is_set():
             new_content = self.decorate_with_self_attributes(
                 datetime.now().strftime(self.date_format)
             )

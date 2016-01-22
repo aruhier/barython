@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 
+import logging
 import signal
 import threading
 
 from barython import _BarSpawner
+
+
+logger = logging.getLogger("barython")
 
 
 class Panel(_BarSpawner):
@@ -59,6 +63,11 @@ class Panel(_BarSpawner):
                 target=screen.start
             ).start()
         self._stop.wait()
+        for screen in self._screens:
+            screen.stop()
+
+    def stop(self, *args, **kwargs):
+        super().stop(*args, **kwargs)
         for screen in self._screens:
             screen.stop()
 
