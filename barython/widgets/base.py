@@ -148,10 +148,14 @@ class ThreadedWidget(Widget):
     #: event to stop the widget
     _stop = None
 
-    def update(self, new_content=None, *args, **kwargs):
+    def handle_result(self, output=None, *args, **kwargs):
+        new_content = self.decorate_with_self_attributes(output)
         threading.Thread(
             target=self._update_screens, args=(new_content,)
         ).start()
+
+    def update(self, *args, **kwargs):
+        pass
 
     def start(self):
         self._stop.clear()
@@ -215,10 +219,9 @@ class SubprocessWidget(ThreadedWidget):
                 output = self._subproc.stdout.readline()
                 finished = self._subproc.poll()
                 if output != b"":
-                    new_content = self.decorate_with_self_attributes(
+                    self.handle_result(
                         output.decode().replace('\n', '').replace('\r', '')
                     )
-                    super().update(new_content=new_content, *args, **kwargs)
                 if finished is not None:
                     self._subproc = self._init_subprocess(self.cmd)
             except Exception as e:
