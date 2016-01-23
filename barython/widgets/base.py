@@ -201,7 +201,10 @@ class SubprocessWidget(ThreadedWidget):
                 )
             self._subscribe_subproc.stdout.readline()
             # hack to flush the stdout
-            self._subscribe_subproc.communicate(timeout=0.05)
+            try:
+                self._subscribe_subproc.communicate(timeout=0.05)
+            except:
+                pass
         return True
 
     def update(self, *args, **kwargs):
