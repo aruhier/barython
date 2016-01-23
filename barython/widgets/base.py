@@ -125,6 +125,7 @@ class Widget():
         self.screens = self.screens if screens is None else self.screens
         if not self.screens:
             self.screens = set()
+        self._lock_start = threading.Condition()
 
 
 class TextWidget(Widget):
@@ -153,8 +154,8 @@ class ThreadedWidget(Widget):
         ).start()
 
     def start(self):
+        self._stop.clear()
         with self._lock_start:
-            self._stop.clear()
             self.update()
 
     def stop(self):
@@ -162,7 +163,6 @@ class ThreadedWidget(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._lock_start = threading.Condition()
         self._stop = threading.Event()
 
 
@@ -185,7 +185,7 @@ class SubprocessWidget(ThreadedWidget):
         """
         if isinstance(cmd, str):
             cmd = shlex.split(cmd)
-        logger.debug("Launching {}".format("".join(cmd)))
+        logger.debug("Launching {}".format(" ".join(cmd)))
         return subprocess.Popen(
             cmd, stdout=subprocess.PIPE, shell=self.shell
         )
@@ -210,7 +210,7 @@ class SubprocessWidget(ThreadedWidget):
 
     def update(self, *args, **kwargs):
         self._subproc = self._init_subprocess(self.cmd)
-        while True and self.notify() and not self._stop.is_set():
+        while not self._stop.is_set() and self.notify():
             try:
                 output = self._subproc.stdout.readline()
                 finished = self._subproc.poll()
@@ -230,11 +230,15 @@ class SubprocessWidget(ThreadedWidget):
                 self._subproc = self._init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)
+        try:
+            self._subproc.terminate()
+        except:
+            pass
 
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
         try:
-            self._notify_subproc.terminate()
+            self._subscribe_subproc.terminate()
         except:
             pass
         try:
