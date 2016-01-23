@@ -11,7 +11,7 @@ def test_empty_bar():
     """
     Test an empty bar
     """
-    p = Panel()
+    p = Panel(instance_per_screen=False)
     p.refresh = 0.2
     s = Screen()
     s.fg = "#FFFFFFFF"
@@ -66,8 +66,8 @@ def test_bar_per_screen():
         s = Screen(screen_name)
         s.fg = "#FFFFFFFF"
         s.bg = "#FF000000"
-        p.add_screen(s)
         s.add_widget("c", w, w1)
+        p.add_screen(s)
 
     try:
         p.start()
