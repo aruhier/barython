@@ -5,6 +5,7 @@ import time
 import timeit
 
 from barython.screen import Screen
+from barython.panel import Panel
 from barython.widgets.base import SubprocessWidget, TextWidget, Widget
 
 
@@ -76,6 +77,24 @@ def test_base_widget_decorate_self_attributes():
             w.decorate("test", font=1, **kwargs))
 
 
+def test_base_lock_update(mocker):
+    """
+    Test that only one update is running at a time by widget
+    """
+    p = Panel(instance_per_screen=False)
+    w = SubprocessWidget(cmd="echo Test", refresh=0.2)
+    for i in range(0, 4):
+        s = Screen()
+        s.add_widget("l", w)
+        p.add_screen(s)
+    mocker.spy(w, "update")
+
+    threading.Thread(target=p.start).start()
+    time.sleep(1)
+    assert w.update.call_count == 1
+    p.stop()
+
+
 def test_base_textwidget():
     tw = TextWidget(text="Test")
     tw.update()
@@ -99,10 +118,9 @@ def test_base_subprocesswidget_notify():
 
 def test_base_subprocesswidget_start():
     sw = SubprocessWidget(cmd="echo Test", subscribe_cmd="sleep 0.5")
-
-    t = threading.Thread(target=sw.start)
     assert sw.content is None
 
+    t = threading.Thread(target=sw.start)
     t.start()
     # Lets a little overtime to be sure it's finished
     time.sleep(0.7)

@@ -30,6 +30,7 @@ class Widget():
     fonts = None
     #: dictionnary of actions
     actions = None
+    _lock_start = None
 
     @property
     def content(self):
@@ -134,7 +135,8 @@ class TextWidget(Widget):
         self._update_screens(new_content)
 
     def start(self):
-        self.update()
+        with self._lock_start:
+            self.update()
 
     def __init__(self, text=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,7 +144,6 @@ class TextWidget(Widget):
 
 
 class ThreadedWidget(Widget):
-    lock_start = None
     #: event to stop the widget
     _stop = None
 
@@ -152,17 +153,16 @@ class ThreadedWidget(Widget):
         ).start()
 
     def start(self):
-        with self.lock_start:
+        with self._lock_start:
             self._stop.clear()
-            t = threading.Thread(target=self.update)
-            t.start()
+            self.update()
 
     def stop(self):
         self._stop.set()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.lock_start = threading.Condition()
+        self._lock_start = threading.Condition()
         self._stop = threading.Event()
 
 
