@@ -172,37 +172,72 @@ class SubprocessWidget(ThreadedWidget):
     """
     #: command to run. Can be an iterable or a string
     cmd = None
+    #: used as a notify: run the command, wait for any output, then run cmd.
+    subscribe_cmd = None
     #: value for the subprocess.Popen shell parameter. Default to False
     shell = False
+    _subscribe_subproc = None
+    _subproc = None
+
+    def _init_subprocess(self, cmd):
+        """
+        Start cmd in a subprocess, and split it if needed
+        """
+        if isinstance(cmd, str):
+            cmd = shlex.split(cmd)
+        return subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, shell=self.shell
+        )
+
+    def notify(self, *args, **kwargs):
+        if self.subscribe_cmd:
+            process_dead = (
+                self._subscribe_subproc is None or
+                self._subscribe_subproc.poll() is not None
+            )
+            if process_dead:
+                self._subscribe_subproc = self._init_subprocess(
+                    self.subscribe_cmd
+                )
+            self._subscribe_subproc.stdout.readline()
+            # hack to flush the stdout
+            self._subscribe_subproc.communicate(timeout=0.05)
+        return True
 
     def update(self, *args, **kwargs):
-        def init_subprocess(cmd):
-            if isinstance(cmd, str):
-                cmd = shlex.split(cmd)
-            return subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, shell=self.shell
-            )
-
-        subproc = init_subprocess(self.cmd)
-        while True and not self._stop.is_set():
+        self._subproc = self._init_subprocess(self.cmd)
+        while True and self.notify() and not self._stop.is_set():
             try:
-                output = subproc.stdout.readline()
-                finished = subproc.poll()
+                output = self._subproc.stdout.readline()
+                finished = self._subproc.poll()
                 if output != b"":
                     new_content = self.decorate_with_self_attributes(
                         output.decode().replace('\n', '').replace('\r', '')
                     )
                     super().update(new_content=new_content, *args, **kwargs)
                 if finished is not None:
-                    subproc = init_subprocess(self.cmd)
+                    self._subproc = self._init_subprocess(self.cmd)
             except Exception as e:
                 logger.error(e)
-                subproc = init_subprocess(self.cmd)
+                self._subproc = self._init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)
-        subproc.terminate()
 
-    def __init__(self, cmd=None, shell=None, *args, **kwargs):
+    def stop(self, *args, **kwargs):
+        super().stop(*args, **kwargs)
+        try:
+            self._notify_subproc.terminate()
+        except:
+            pass
+        try:
+            self._subproc.terminate()
+        except:
+            pass
+
+    def __init__(self, cmd=None, subscribe_cmd=None, shell=None,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cmd = self.cmd if cmd is None else cmd
+        self.subscribe_cmd = (self.subscribe_cmd
+                              if subscribe_cmd is None else subscribe_cmd)
         self.shell = self.shell if shell is None else shell
