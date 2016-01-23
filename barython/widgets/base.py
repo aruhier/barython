@@ -185,6 +185,7 @@ class SubprocessWidget(ThreadedWidget):
         """
         if isinstance(cmd, str):
             cmd = shlex.split(cmd)
+        logger.debug("Launching {}".format("".join(cmd)))
         return subprocess.Popen(
             cmd, stdout=subprocess.PIPE, shell=self.shell
         )
