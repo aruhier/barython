@@ -13,6 +13,7 @@ class _BarSpawner():
     #: used to limit the update
     _update_lock = None
     _refresh_lock = None
+    _cache = None
     #: event to stop the screen
     _stop = None
     fg = None
@@ -25,18 +26,21 @@ class _BarSpawner():
         """
         Draws the bar on the screen
         """
-        def write_in_bar():
-            content = (self.gather() + "\n").encode()
+        def write_in_bar(content):
             self._bar.stdin.write(content)
             logger.debug("Writing {}".format(content))
             self._bar.stdin.flush()
 
+        content = (self.gather() + "\n").encode()
+        if self._cache == content:
+            return
+        self._cache = content
         try:
-            write_in_bar()
+            write_in_bar(content)
         except (BrokenPipeError, AttributeError):
             logger.info("Lemonbar is off, init it")
             self.init_bar()
-            write_in_bar()
+            write_in_bar(content)
 
     def gather(self):
         """
@@ -88,7 +92,7 @@ class _BarSpawner():
         )
 
     def start(self):
-        raise NotImplemented
+        self._cache = None
 
     def stop_bar(self, kill=False):
         """

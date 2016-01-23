@@ -52,6 +52,7 @@ class Panel(_BarSpawner):
 
     def start(self):
         logging.debug("Starts the panel")
+        super().start()
         self._stop.clear()
         try:
             signal.signal(signal.SIGINT, self.stop)

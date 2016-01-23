@@ -136,6 +136,7 @@ class Screen(_BarSpawner):
         Starts all widgets in there own threads. They will callback a screen
         update in case of any change.
         """
+        super().start()
         self._stop.clear()
         try:
             signal.signal(signal.SIGINT, self.stop)
