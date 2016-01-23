@@ -31,5 +31,5 @@ setup(
     packages=["barython", ],
     # install_requires=["appdirs", "argparse", "bencodepy"],
     setup_requires=['pytest-runner', ],
-    tests_require=['pytest', 'pytest-cov'],
+    tests_require=['pytest', 'pytest-cov', "pytest-xdist"],
 )

@@ -219,6 +219,10 @@ class SubprocessWidget(ThreadedWidget):
                     self._subproc = self._init_subprocess(self.cmd)
             except Exception as e:
                 logger.error(e)
+                try:
+                    self._subproc.terminate()
+                except:
+                    pass
                 self._subproc = self._init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)

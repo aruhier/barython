@@ -1,8 +1,11 @@
 
 import pytest
+import threading
+import time
+import timeit
 
 from barython.screen import Screen
-from barython.widgets.base import Widget
+from barython.widgets.base import SubprocessWidget, TextWidget, Widget
 
 
 def test_base_widget_construction():
@@ -71,3 +74,37 @@ def test_base_widget_decorate_self_attributes():
 
     assert (w.decorate_with_self_attributes("test") ==
             w.decorate("test", font=1, **kwargs))
+
+
+def test_base_textwidget():
+    tw = TextWidget(text="Test")
+    tw.update()
+
+    assert tw.content == "Test"
+
+
+def test_base_subprocesswidget_init_subprocess():
+    cmd = "echo Test"
+    sw = SubprocessWidget(cmd=cmd)
+    subproc = sw._init_subprocess(cmd)
+
+    assert subproc.stdout.readline() == b"Test\n"
+
+
+def test_base_subprocesswidget_notify():
+    sw = SubprocessWidget(subscribe_cmd="sleep 0.5")
+    total_time = timeit.timeit(sw.notify, number=2)
+    assert int(total_time) == 1
+
+
+def test_base_subprocesswidget_start():
+    sw = SubprocessWidget(cmd="echo Test", subscribe_cmd="sleep 0.5")
+
+    t = threading.Thread(target=sw.start)
+    assert sw.content is None
+
+    t.start()
+    # Lets a little overtime to be sure it's finished
+    time.sleep(0.7)
+    sw.stop()
+    assert sw.content == "Test"
