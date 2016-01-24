@@ -30,5 +30,6 @@ def safe_import(module_name, class_name):
         logger.debug(traceback.format_exc())
 
 
+safe_import(".audio", "PulseAudioWidget")
 safe_import(".base", "TextWidget")
 safe_import(".clock", "ClockWidget")
