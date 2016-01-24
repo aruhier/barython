@@ -17,7 +17,7 @@ class Widget():
     #: cache the content after update
     _content = None
     #: refresh rate
-    _refresh = 0
+    _refresh = -1
     #: screens linked. Used for callbacks
     screens = None
     #: background for the widget
@@ -38,10 +38,10 @@ class Widget():
 
     @property
     def refresh(self):
-        if self._refresh == 0 and self.screens is not None:
+        if self._refresh == -1 and self.screens is not None:
             return min([screen.refresh for screen in self.screens])
         else:
-            return self._refresh
+            return max(0, self._refresh)
 
     @refresh.setter
     def refresh(self, value):
@@ -182,6 +182,7 @@ class SubprocessWidget(ThreadedWidget):
     shell = False
     _subscribe_subproc = None
     _subproc = None
+    _flush_time = 0.05
 
     def _init_subprocess(self, cmd):
         """
@@ -207,14 +208,14 @@ class SubprocessWidget(ThreadedWidget):
             self._subscribe_subproc.stdout.readline()
             # hack to flush the stdout
             try:
-                self._subscribe_subproc.communicate(timeout=0.05)
+                self._subscribe_subproc.communicate(timeout=self._flush_time)
             except:
                 pass
         return True
 
     def update(self, *args, **kwargs):
         self._subproc = self._init_subprocess(self.cmd)
-        while not self._stop.is_set() and self.notify():
+        while not self._stop.is_set():
             try:
                 output = self._subproc.stdout.readline()
                 finished = self._subproc.poll()
@@ -222,7 +223,7 @@ class SubprocessWidget(ThreadedWidget):
                     self.handle_result(
                         output.decode().replace('\n', '').replace('\r', '')
                     )
-                if finished is not None:
+                if finished is not None and self.notify():
                     self._subproc = self._init_subprocess(self.cmd)
             except Exception as e:
                 logger.error(e)
@@ -230,6 +231,7 @@ class SubprocessWidget(ThreadedWidget):
                     self._subproc.terminate()
                 except:
                     pass
+                self.notify()
                 self._subproc = self._init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)
