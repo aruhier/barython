@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import time
 
 from .base import SubprocessWidget
 
@@ -13,21 +14,38 @@ class PulseAudioWidget(SubprocessWidget):
     cmd = ["pulseaudio-ctl", "full-status"]
     #: used as a notify: run the command, wait for any output, then run cmd.
     subscribe_cmd = ["pactl", "subscribe", "-n", "barython"]
-    _flush_time = 0.3
+    #: this value should be changed if something produces a lot of pulseaudio
+    #  events
+    _flush_time = 0.05
+
+    def notify(self, *args, **kwargs):
+        if self.subscribe_cmd:
+            self._init_subscribe_subproc()
+            while not self._stop.is_set():
+                try:
+                    line = self._subscribe_subproc.stdout.readline()
+                    # Only notify if there is something changes in pulseaudio
+                    event_change_msg = b"Event 'change' on destination"
+                    if event_change_msg in line:
+                        logger.debug("PA: line \"{}\" catched.".format(line))
+                        return True
+                except Exception as e:
+                    logger.error("Error when reading line: {}".format(e))
+                    self._init_subscribe_subproc()
+        return True
 
     def handle_result(self, output=None, *args, **kwargs):
         # As pulseaudio-ctl add events in pactl subscribe, flush output
         try:
-            self._subscribe_subproc.communicate(timeout=self._flush_time)
-        except:
-            pass
-        try:
             if output != "" and output is not None:
                 volume, output_mute, _ = output.split()
                 output = volume
-            return super().handle_result(output=output)
+            super().handle_result(output=output)
         except Exception as e:
             logger.error("Error in PulseAudioWidget: {}", e)
+        if self._flush_time:
+            time.sleep(self._flush_time)
+            self._no_blocking_read(self._subscribe_subproc.stdout)
 
     def __init__(self, refresh=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

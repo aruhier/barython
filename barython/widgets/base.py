@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import fcntl
 import logging
+import os
 import shlex
 import subprocess
 import threading
@@ -182,7 +184,20 @@ class SubprocessWidget(ThreadedWidget):
     shell = False
     _subscribe_subproc = None
     _subproc = None
-    _flush_time = 0.05
+
+    def _no_blocking_read(self, output):
+        """
+        Set the output to be non blockant and read it
+        """
+        fd = output.fileno()
+        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+        try:
+            result = output.read()
+        except:
+            result = b""
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl)
+        return result
 
     def _init_subprocess(self, cmd):
         """
@@ -195,20 +210,23 @@ class SubprocessWidget(ThreadedWidget):
             cmd, stdout=subprocess.PIPE, shell=self.shell
         )
 
+    def _init_subscribe_subproc(self):
+        process_dead = (
+            self._subscribe_subproc is None or
+            self._subscribe_subproc.poll() is not None
+        )
+        if process_dead:
+            self._subscribe_subproc = self._init_subprocess(
+                self.subscribe_cmd
+            )
+
     def notify(self, *args, **kwargs):
         if self.subscribe_cmd:
-            process_dead = (
-                self._subscribe_subproc is None or
-                self._subscribe_subproc.poll() is not None
-            )
-            if process_dead:
-                self._subscribe_subproc = self._init_subprocess(
-                    self.subscribe_cmd
-                )
+            self._init_subscribe_subproc()
             self._subscribe_subproc.stdout.readline()
             # hack to flush the stdout
             try:
-                self._subscribe_subproc.communicate(timeout=self._flush_time)
+                self._no_blocking_read(self._subscribe_subproc.stdout)
             except:
                 pass
         return True
