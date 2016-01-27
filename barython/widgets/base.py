@@ -93,6 +93,15 @@ class Widget():
 
         return self.decorate(text, **d_kwargs)
 
+    def organize_result(self, *args, **kwargs):
+        """
+        Organize the info to show with the splitted infos received
+
+        Organize the panel without handling the decoration (fg, bg, etc…)
+        Override this method to change the way the info is printed
+        """
+        return "".join(*args)
+
     def _update_screens(self, new_content):
         """
         If content has changed, request the screen update
@@ -134,7 +143,9 @@ class TextWidget(Widget):
     text = ""
 
     def update(self):
-        new_content = self.decorate_with_self_attributes(self.text)
+        new_content = self.decorate_with_self_attributes(
+            self.organize_result(self.text)
+        )
         self._update_screens(new_content)
 
     def start(self):
@@ -238,9 +249,9 @@ class SubprocessWidget(ThreadedWidget):
                 output = self._subproc.stdout.readline()
                 finished = self._subproc.poll()
                 if output != b"":
-                    self.handle_result(
+                    self.handle_result(self.organize_result(
                         output.decode().replace('\n', '').replace('\r', '')
-                    )
+                    ))
                 if finished is not None and self.notify():
                     self._subproc = self._init_subprocess(self.cmd)
             except Exception as e:

@@ -34,12 +34,18 @@ class PulseAudioWidget(SubprocessWidget):
                     self._init_subscribe_subproc()
         return True
 
+    def organize_result(self, volume, output_mute=None, input_mute=None,
+                        *args, **kwargs):
+        """
+        Override this method to change the infos to print
+        """
+        return "{}".format(volume)
+
     def handle_result(self, output=None, *args, **kwargs):
         # As pulseaudio-ctl add events in pactl subscribe, flush output
         try:
             if output != "" and output is not None:
-                volume, output_mute, _ = output.split()
-                output = volume
+                output = self.organize_result(*output.split())
             super().handle_result(output=output)
         except Exception as e:
             logger.error("Error in PulseAudioWidget: {}", e)
