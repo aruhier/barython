@@ -21,4 +21,4 @@ License
 -------
 
 Tool under the BSD license. Do not hesitate to report bugs, ask me some
-questions or do some pull request if you want to !
+questions or do some pull request if you want to!
