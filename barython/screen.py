@@ -142,12 +142,21 @@ class Screen(_BarSpawner):
             signal.signal(signal.SIGINT, self.stop)
         except ValueError:
             pass
+
+        attached_widgets = list(itertools.chain(*self._widgets.values()))
+
         if self.panel.instance_per_screen:
             if self.name and self.geometry is None:
                 return
             self.init_bar()
+        elif len(attached_widgets) == 0:
+            # No widget attached, no need to keep this thread opened
+            # TODO: Add a test for it
+            self.content = ""
+            self.stop()
+            return
 
-        for widget in itertools.chain(*self._widgets.values()):
+        for widget in attached_widgets:
             threading.Thread(
                 target=widget.start
             ).start()
