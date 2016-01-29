@@ -44,16 +44,6 @@ def get_randr_screens():
 
 
 class Screen(_BarSpawner):
-    #: widgets to show on this screen
-    _widgets = None
-    #: refresh rate
-    _refresh = 0
-    #: bar geometry, in a tuple (x, y, position_x, position_y)
-    _geometry = None
-    #: screen name
-    name = None
-    panel = None
-
     @property
     def refresh(self):
         if self._refresh == 0 and self.panel is not None:
@@ -168,12 +158,20 @@ class Screen(_BarSpawner):
         for widget in itertools.chain(*self._widgets.values()):
             widget.stop()
 
-    def __init__(self, name=None, refresh=None, geometry=None, panel=None,
+    def __init__(self, name=None, refresh=0, geometry=None, panel=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.name = self.name if name is None else name
-        if refresh:
-            self._refresh = refresh
-        self.panel = self.panel if panel is None else panel
+
+        #: screen name
+        self.name = name
+
+        #: refresh rate
+        self._refresh = refresh
+
+        self.panel = panel
+
+        #: bar geometry, in a tuple (x, y, position_x, position_y)
         self.geometry = geometry
+
+        #: widgets to show on this screen
         self._widgets = OrderedDict([("l", []), ("c", []), ("r", [])])

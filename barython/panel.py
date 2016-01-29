@@ -12,16 +12,8 @@ logger = logging.getLogger("barython")
 
 
 class Panel(_BarSpawner):
-    #: launch one bar per screen or use only one with %{S+}
-    instance_per_screen = True
     #: command for lemonbar
     bar_cmd = "lemonbar"
-    #: geometry
-    geometry = None
-    #: refresh rate
-    refresh = 0.1
-    #: screens attached to this panel
-    _screens = None
 
     def add_screen(self, *screens, index=None):
         """
@@ -73,14 +65,17 @@ class Panel(_BarSpawner):
         for screen in self._screens:
             screen.stop()
 
-    def __init__(self, instance_per_screen=None, geometry=None, refresh=None,
+    def __init__(self, instance_per_screen=True, geometry=None, refresh=0.1,
                  screens=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.instance_per_screen = (self.refresh
-                                    if instance_per_screen is None
-                                    else instance_per_screen)
-        self.refresh = self.refresh if refresh is None else refresh
-        self._screens = self._screens if screens is None else screens
-        if not self._screens:
-            self._screens = []
-        self.geometry = self.geometry if geometry is None else geometry
+        #: launch one bar per screen or use only one with %{S+}
+        self.instance_per_screen = instance_per_screen
+
+        #: refresh rate
+        self.refresh = refresh
+
+        #: screens attached to this panel
+        self._screens = screens if screens is not None else []
+
+        #: geometry
+        self.geometry = geometry

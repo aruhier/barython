@@ -18,21 +18,7 @@ class Widget():
     """
     #: cache the content after update
     _content = None
-    #: refresh rate
     _refresh = -1
-    #: screens linked. Used for callbacks
-    screens = None
-    #: background for the widget
-    bg = None
-    #: foreground for the widget
-    fg = None
-    #: padding
-    padding = 0
-    #: list of fonts index used
-    fonts = None
-    #: dictionnary of actions
-    actions = None
-    _lock_start = None
 
     @property
     def content(self):
@@ -120,22 +106,29 @@ class Widget():
     def stop(self, *args, **kwargs):
         pass
 
-    def __init__(self, bg=None, fg=None, padding=None, fonts=None,
-                 actions=None, refresh=None, screens=None):
-        self.bg = self.bg if bg is None else bg
-        self.fg = self.fg if fg is None else fg
-        self.fonts = self.fonts if fonts is None else fonts
-        if self.fonts is None:
-            self.fonts = tuple()
-        self.actions = self.actions if actions is None else actions
-        if self.actions is None:
-            self.actions = dict()
-        self.padding = self.padding if padding is None else padding
-        if refresh is not None:
-            self._refresh = refresh
-        self.screens = self.screens if screens is None else self.screens
-        if not self.screens:
-            self.screens = set()
+    def __init__(self, bg=None, fg=None, padding=0, fonts=None,
+                 actions=None, refresh=-1, screens=None):
+        #: background for the widget
+        self.bg = bg
+
+        #: foreground for the widget
+        self.fg = fg
+
+        #: list of fonts index used
+        self.fonts = fonts if fonts is not None else tuple()
+
+        #: dictionnary of actions
+        self.actions = actions if actions is not None else dict()
+
+        #: padding
+        self.padding = padding
+
+        #: refresh rate
+        self.refresh = refresh
+
+        #: screens linked. Used for callbacks
+        self.screens = screens if screens is not None else set()
+
         self._lock_start = threading.Condition()
 
 
@@ -158,9 +151,6 @@ class TextWidget(Widget):
 
 
 class ThreadedWidget(Widget):
-    #: event to stop the widget
-    _stop = None
-
     def handle_result(self, output=None, *args, **kwargs):
         new_content = self.decorate_with_self_attributes(output)
         threading.Thread(
@@ -180,6 +170,7 @@ class ThreadedWidget(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        #: event to stop the widget
         self._stop = threading.Event()
 
 
@@ -187,12 +178,6 @@ class SubprocessWidget(ThreadedWidget):
     """
     Run a subprocess in a loop
     """
-    #: command to run. Can be an iterable or a string
-    cmd = None
-    #: used as a notify: run the command, wait for any output, then run cmd.
-    subscribe_cmd = None
-    #: value for the subprocess.Popen shell parameter. Default to False
-    shell = False
     _subscribe_subproc = None
     _subproc = None
 
@@ -280,10 +265,16 @@ class SubprocessWidget(ThreadedWidget):
         except:
             pass
 
-    def __init__(self, cmd=None, subscribe_cmd=None, shell=None,
+    def __init__(self, cmd, subscribe_cmd=None, shell=False,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cmd = self.cmd if cmd is None else cmd
-        self.subscribe_cmd = (self.subscribe_cmd
-                              if subscribe_cmd is None else subscribe_cmd)
-        self.shell = self.shell if shell is None else shell
+
+        #: command to run. Can be an iterable or a string
+        self.cmd = cmd
+
+        #: used as a notify: run the command, wait for any output, then run
+        #  cmd.
+        self.subscribe_cmd = subscribe_cmd
+
+        #: value for the subprocess.Popen shell parameter. Default to False
+        self.shell = shell

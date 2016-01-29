@@ -10,10 +10,6 @@ logger = logging.getLogger("barython")
 
 
 class PulseAudioWidget(SubprocessWidget):
-    #: command to run. Can be an iterable or a string
-    cmd = ["pulseaudio-ctl", "full-status"]
-    #: used as a notify: run the command, wait for any output, then run cmd.
-    subscribe_cmd = ["pactl", "subscribe", "-n", "barython"]
     #: this value should be changed if something produces a lot of pulseaudio
     #  events
     _flush_time = 0.05
@@ -53,9 +49,8 @@ class PulseAudioWidget(SubprocessWidget):
             time.sleep(self._flush_time)
             self._no_blocking_read(self._subscribe_subproc.stdout)
 
-    def __init__(self, refresh=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # As we wait self.flush_time seconds when flushing the output,
-        if refresh is None:
-            refresh = 0
-        self.refresh = max(0, refresh - self._flush_time)
+    def __init__(self, cmd=["pulseaudio-ctl", "full-status"],
+                 subscribe_cmd=["pactl", "subscribe", "-n", "barython"],
+                 *args, **kwargs):
+        super().__init__(cmd, subscribe_cmd, *args, **kwargs)
+        self.refresh = max(0, self.refresh - self._flush_time)

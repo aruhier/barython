@@ -10,17 +10,7 @@ logger = logging.getLogger("barython")
 
 
 class _BarSpawner():
-    #: used to limit the update
-    _update_lock = None
-    _refresh_lock = None
     _cache = None
-    #: event to stop the screen
-    _stop = None
-    fg = None
-    bg = None
-    fonts = None
-    height = 18
-    offset = None
 
     def draw(self):
         """
@@ -113,19 +103,21 @@ class _BarSpawner():
         self._stop.set()
         self.stop_bar()
 
-    def __init__(self, offset=None, height=None, geometry=None, fg=None,
+    def __init__(self, offset=None, height=18, geometry=None, fg=None,
                  bg=None, fonts=None):
-        self.height = self.height if height is None else height
-        self.offset = self.offset if offset is None else offset
-        if self.offset is None:
-            self.offset = (0, 0, 0)
-        self.geometry = geometry
-        self.fg = self.fg if fg is None else fg
-        self.bg = self.bg if bg is None else bg
-        self.fonts = self.fonts if fonts is None else fonts
+        #: used to limit the update
         self._update_lock = threading.Lock()
+
         self._refresh_lock = threading.Semaphore(2)
+        #: event to stop the screen
         self._stop = threading.Event()
+
+        self.height = height
+        self.offset = offset if offset is not None else (0, 0, 0)
+        self.geometry = geometry
+        self.fg = fg
+        self.bg = bg
+        self.fonts = fonts
 
 
 from .panel import Panel
