@@ -100,6 +100,16 @@ class Widget():
     def update(self):
         pass
 
+    def subscribe(self, callback, *events):
+        """
+        Subscribe to events, listened by the panel
+        """
+        for e in events:
+            if self.hooks.get(e, None) is None:
+                self.hooks[e] = set()
+            self.hooks[e].add(callback)
+        # TODO: add the new subscriptions in the panel
+
     def start(self, *args, **kwargs):
         pass
 
@@ -128,6 +138,9 @@ class Widget():
 
         #: screens linked. Used for callbacks
         self.screens = screens if screens is not None else set()
+
+        #: list of hooks
+        self.hooks = dict()
 
         self._lock_start = threading.Condition()
 
