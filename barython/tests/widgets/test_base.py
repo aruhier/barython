@@ -89,10 +89,12 @@ def test_base_lock_update(mocker):
         p.add_screen(s)
     mocker.spy(w, "continuous_update")
 
-    threading.Thread(target=p.start).start()
-    time.sleep(1)
-    assert w.continuous_update.call_count == 1
-    p.stop()
+    try:
+        threading.Thread(target=p.start).start()
+        time.sleep(1)
+        assert w.continuous_update.call_count == 1
+    finally:
+        p.stop()
 
 
 def test_base_textwidget():
