@@ -79,3 +79,5 @@ class Panel(_BarSpawner):
 
         #: geometry
         self.geometry = geometry
+
+        self.hooks.listen = True

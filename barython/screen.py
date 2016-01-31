@@ -97,6 +97,7 @@ class Screen(_BarSpawner):
             )
         for w in self._widgets[alignment]:
             w.screens.add(self)
+            self.hooks.merge(w.hooks)
 
     def gather(self):
         """

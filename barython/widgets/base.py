@@ -55,7 +55,7 @@ class Widget():
             joined_actions = ""
         return (9*"{}").format(
             joined_actions,
-            "%{{B{}}}".format(bg) if fg else "",
+            "%{{B{}}}".format(bg) if bg else "",
             "%{{F{}}}".format(fg) if fg else "",
             "%{{T{}}}".format(font) if font else "",
             text.center(len(text) + 2*padding),
@@ -98,18 +98,11 @@ class Widget():
             for screen in self.screens:
                 screen.update()
 
-    def update(self):
+    def continuous_update(self):
         pass
 
-    def subscribe(self, callback, *events):
-        """
-        Subscribe to events, listened by the panel
-        """
-        for e in events:
-            if self.hooks.get(e, None) is None:
-                self.hooks[e] = set()
-            self.hooks[e].add(callback)
-        # TODO: add the new subscriptions in the panel
+    def update(self):
+        pass
 
     def start(self, *args, **kwargs):
         pass
@@ -118,7 +111,7 @@ class Widget():
         pass
 
     def __init__(self, bg=None, fg=None, padding=0, fonts=None,
-                 actions=None, refresh=-1, screens=None):
+                 actions=None, refresh=-1, screens=None, infinite=False):
         #: background for the widget
         self.bg = bg
 
@@ -140,8 +133,11 @@ class Widget():
         #: screens linked. Used for callbacks
         self.screens = screens if screens is not None else set()
 
-        #: list of hooks
-        self.hooks = dict()
+        #: pool of hooks
+        self.hooks = HooksPool(parent=self)
+
+        #: run in an infinite loop or not
+        self.infinite = infinite
 
         self._lock_start = threading.Condition()
 
@@ -162,6 +158,7 @@ class TextWidget(Widget):
     def __init__(self, text=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text = self.text if text is None else text
+        self.infinite = False
 
 
 class ThreadedWidget(Widget):
@@ -182,13 +179,16 @@ class ThreadedWidget(Widget):
     def start(self):
         self._stop.clear()
         with self._lock_start:
-            self.continuous_update()
+            if self.infinite:
+                self.continuous_update()
+            else:
+                return self.update()
 
     def stop(self):
         self._stop.set()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, infinite=True, *args, **kwargs):
+        super().__init__(*args, **kwargs, infinite=infinite)
         #: event to stop the widget
         self._stop = threading.Event()
 
@@ -298,5 +298,3 @@ class SubprocessWidget(ThreadedWidget):
 
         #: value for the subprocess.Popen shell parameter. Default to False
         self.shell = shell
-
-        self.hooks = HooksPool(parent=self)

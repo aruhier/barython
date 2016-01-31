@@ -31,6 +31,10 @@ class _Hook(threading.Thread):
             except:
                 continue
 
+    def start(self, *args, **kwargs):
+        self._stop.clear()
+        return super().start(*args, **kwargs)
+
     def stop(self):
         self._stop.set()
 
@@ -52,9 +56,12 @@ class HooksPool():
         """
         Merge with another pool
         """
-        for e, callbacks in [pool.hooks for pool in pools]:
-            for c in callbacks:
-                self.subscribe(c, e)
+        if not len(pools):
+            return
+        for pool in pools:
+            for hook_class, hook in pool.hooks.items():
+                for c in hook.callbacks:
+                    self.subscribe(c, hook_class)
 
     def subscribe(self, callback, *events):
         """
@@ -68,7 +75,11 @@ class HooksPool():
                     hook.start()
             else:
                 self.hooks[e].callbacks.add(callback)
-        if self.parent and self.parent.panel:
+        is_attached_to_panel = (
+            getattr(self, "parent", None) and
+            getattr(self.parent, "panel", None)
+        )
+        if is_attached_to_panel:
             self.parent.panel.hooks.subscribe(callback, *events)
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
