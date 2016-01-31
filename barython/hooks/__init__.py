@@ -39,6 +39,11 @@ class _Hook(threading.Thread):
 
     def stop(self):
         self._stop.set()
+        if self._subproc:
+            try:
+                self._subproc.terminate()
+            except:
+                pass
 
     def __init__(self, callbacks=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,6 +88,10 @@ class HooksPool():
         )
         if is_attached_to_panel:
             self.parent.panel.hooks.subscribe(callback, *events)
+
+    def stop(self):
+        for hook in self.hooks.values():
+            hook.stop()
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
         #: Actually listen on these events or not
