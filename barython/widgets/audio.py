@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import time
 
 from .base import SubprocessWidget
 from barython.hooks.audio import PulseAudioHook
@@ -11,10 +10,6 @@ logger = logging.getLogger("barython")
 
 
 class PulseAudioWidget(SubprocessWidget):
-    #: this value should be changed if something produces a lot of pulseaudio
-    #  events
-    _flush_time = 0.05
-
     def handler(self, event, *args, **kwargs):
         """
         Filter events sent by the notifications
@@ -23,7 +18,7 @@ class PulseAudioWidget(SubprocessWidget):
         event_change_msg = "Event 'change' on destination"
         if event_change_msg in event:
             logger.debug("PA: line \"{}\" catched.".format(event))
-            return True
+            return self.update()
 
     def organize_result(self, volume, output_mute=None, input_mute=None,
                         *args, **kwargs):
@@ -44,5 +39,6 @@ class PulseAudioWidget(SubprocessWidget):
     def __init__(self, cmd=["pulseaudio-ctl", "full-status"],
                  *args, **kwargs):
         super().__init__(cmd, infinite=False, *args, **kwargs)
-        self.refresh = max(0, self.refresh - self._flush_time)
+
+        # Update the widget when PA volume changes
         self.hooks.subscribe(self.handler, PulseAudioHook)

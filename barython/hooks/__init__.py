@@ -10,13 +10,15 @@ logger = logging.getLogger("barython")
 
 
 class _Hook(threading.Thread):
+    _subproc = None
+
     def _init_subproc(self):
         """
         Init a subproc to listen on an event
         """
         process_dead = (
-            self._subscribe_subproc is None or
-            self._subscribe_subproc.poll() is not None
+            self._subproc is None or
+            self._subproc.poll() is not None
         )
         if process_dead:
             logger.debug("Launching {}".format(" ".join(self.cmd)))
