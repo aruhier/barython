@@ -2,6 +2,7 @@
 
 
 import logging
+import shlex
 import subprocess
 import threading
 
@@ -25,6 +26,12 @@ class _Hook(threading.Thread):
             return subprocess.Popen(
                 self.cmd, stdout=subprocess.PIPE, shell=self.shell
             )
+
+    def parse_event(self, event):
+        """
+        Parse event and return a kwargs meant be used by notify() then
+        """
+        return {"event": event, }
 
     def notify(self, *args, **kwargs):
         for c in self.callbacks:
@@ -56,6 +63,32 @@ class _Hook(threading.Thread):
 
         #: event to stop the screen
         self._stop = threading.Event()
+
+
+class SubprocessHook(_Hook):
+    def run(self):
+        self._subproc = self._init_subproc()
+        while not self._stop.is_set():
+            try:
+                line = self._subproc.stdout.readline()
+                notify_kwargs = self.parse_event(
+                    line.decode().replace('\n', '').replace('\r', '')
+                )
+                self.notify(**notify_kwargs)
+            except Exception as e:
+                logger.error("Error when reading line: {}".format(e))
+                try:
+                    self._subproc.kill()
+                except:
+                    pass
+                self._subproc = self._init_subproc()
+
+    def __init__(self, cmd, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if isinstance(cmd, str):
+            cmd = shlex.split(cmd)
+        self.cmd = cmd
+        self.shell = False
 
 
 class HooksPool():
