@@ -7,10 +7,13 @@ from .base import ThreadedWidget
 
 
 class ClockWidget(ThreadedWidget):
-    def update(self, *args, **kwargs):
+    def continuous_update(self):
         while True and not self._stop.is_set():
-            self.handle_result(datetime.now().strftime(self.date_format))
+            self.update()
             time.sleep(self.refresh)
+
+    def update(self, *args, **kwargs):
+            self.handle_result(datetime.now().strftime(self.date_format))
 
     def __init__(self, date_format="%c", *args, **kwargs):
         super().__init__(*args, **kwargs)

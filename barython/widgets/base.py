@@ -171,13 +171,18 @@ class ThreadedWidget(Widget):
             target=self._update_screens, args=(new_content,)
         ).start()
 
+    def continuous_update(self, *args, **kwargs):
+        while True and not self._stop.is_set():
+            self.update()
+            time.sleep(self.refresh)
+
     def update(self, *args, **kwargs):
         pass
 
     def start(self):
         self._stop.clear()
         with self._lock_start:
-            self.update()
+            self.continuous_update()
 
     def stop(self):
         self._stop.set()
@@ -241,32 +246,33 @@ class SubprocessWidget(ThreadedWidget):
                 pass
         return True
 
-    def update(self, *args, **kwargs):
-        self._subproc = self._init_subprocess(self.cmd)
+    def continuous_update(self):
         while not self._stop.is_set():
             try:
-                output = self._subproc.stdout.readline()
-                finished = self._subproc.poll()
-                if output != b"":
-                    self.handle_result(self.organize_result(
-                        output.decode().replace('\n', '').replace('\r', '')
-                    ))
-                if finished is not None and self.notify():
-                    self._subproc = self._init_subprocess(self.cmd)
+                self.update()
             except Exception as e:
                 logger.error(e)
                 try:
                     self._subproc.terminate()
                 except:
                     pass
-                self.notify()
-                self._subproc = self._init_subprocess(self.cmd)
             finally:
                 time.sleep(self.refresh)
+                self.notify()
         try:
             self._subproc.terminate()
         except:
             pass
+
+    def update(self, *args, **kwargs):
+        self._subproc = self._init_subprocess(self.cmd)
+        output = self._subproc.stdout.readline()
+        if output != b"":
+            self.handle_result(self.organize_result(
+                output.decode().replace('\n', '').replace('\r', '')
+            ))
+        if self._subproc.poll() is None:
+            self._subproc.terminate()
 
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)

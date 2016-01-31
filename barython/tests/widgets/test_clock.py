@@ -25,9 +25,5 @@ def test_clock_widget_content(mocker):
     MockDatetime.fixed_date = now
     datetime.datetime = MockDatetime
 
-    threading.Thread(target=cw.start).start()
-    time.sleep(0.1)
-    try:
-        assert cw.content == str(now)
-    finally:
-        cw.stop()
+    cw.update()
+    assert cw.content == str(now)

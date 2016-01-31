@@ -2,6 +2,7 @@
 
 
 import logging
+import subprocess
 import threading
 
 
@@ -9,6 +10,20 @@ logger = logging.getLogger("barython")
 
 
 class _Hook(threading.Thread):
+    def _init_subproc(self):
+        """
+        Init a subproc to listen on an event
+        """
+        process_dead = (
+            self._subscribe_subproc is None or
+            self._subscribe_subproc.poll() is not None
+        )
+        if process_dead:
+            logger.debug("Launching {}".format(" ".join(self.cmd)))
+            return subprocess.Popen(
+                self.cmd, stdout=subprocess.PIPE, shell=self.shell
+            )
+
     def notify(self, *args, **kwargs):
         for c in self.callbacks:
             try:
@@ -16,12 +31,20 @@ class _Hook(threading.Thread):
             except:
                 continue
 
+    def stop(self):
+        self._stop.set()
+
     def __init__(self, callbacks=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.daemon = True
+
+        #: list of callbacks to use during when notify
         self.callbacks = set()
         if callbacks is not None:
             self.callbacks.update(callbacks)
+
+        #: event to stop the screen
+        self._stop = threading.Event()
 
 
 class HooksPool():
