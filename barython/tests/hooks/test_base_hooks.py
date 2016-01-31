@@ -4,6 +4,21 @@ import pytest
 from barython.hooks import HooksPool, _Hook
 
 
+def test_base_hook_notify(mocker):
+    """
+    Test _Hook.notify
+    """
+    stub = mocker.stub()
+    hook = _Hook(callbacks={stub, })
+    hook.notify()
+    stub.assert_called_once_with()
+
+
+def test_base_hook_notify_without_callback(mocker):
+    hook = _Hook()
+    hook.notify()
+
+
 def test_base_hooks_pool_subscribe():
     def callback():
         pass
