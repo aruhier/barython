@@ -111,7 +111,7 @@ def test_base_subprocesswidget_init_subprocess():
 
 
 def test_base_subprocesswidget_notify():
-    sw = SubprocessWidget(subscribe_cmd="sleep 0.5")
+    sw = SubprocessWidget(cmd="echo test", subscribe_cmd="sleep 0.5")
     total_time = timeit.timeit(sw.notify, number=2)
     assert int(total_time) == 1
 
