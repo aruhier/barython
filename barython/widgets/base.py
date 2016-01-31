@@ -8,6 +8,7 @@ import subprocess
 import threading
 import time
 
+from barython.hooks import HooksPool
 
 logger = logging.getLogger("barython")
 
@@ -291,3 +292,5 @@ class SubprocessWidget(ThreadedWidget):
 
         #: value for the subprocess.Popen shell parameter. Default to False
         self.shell = shell
+
+        self.hooks = HooksPool(parent=self)

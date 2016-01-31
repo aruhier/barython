@@ -3,7 +3,8 @@ import logging
 import time
 import threading
 
-from . import tools
+from barython import tools
+from barython.hooks import HooksPool
 
 
 logger = logging.getLogger("barython")
@@ -118,6 +119,8 @@ class _BarSpawner():
         self.fg = fg
         self.bg = bg
         self.fonts = fonts
+
+        self.hooks = HooksPool(parent=self)
 
 
 from .panel import Panel
