@@ -42,10 +42,11 @@ def test_base_widget_decorate():
         text, fg=fg, bg=bg, font=font, padding=padding, actions=actions
     )
     expected_result = (
-        "%{{A1:firefox&:}}%{{A3:urxvt&:}}%{{B{}}}%{{F{}}}%{{T{}}}"
-        "  {}  "
-        "%{{T-}}%{{F-}}%{{B-}}%{{A}}%{{A}}"
-    ).format(bg, fg, font, text)
+        "%{{A1:firefox&:}}%{{A3:urxvt&:}}"
+        "%{{B{}}}%{{F{}}}%{{T{}}}  %{{T-}}%{{F-}}%{{B-}}"
+        "%{{B{}}}%{{F{}}}%{{T{}}}{}%{{T-}}%{{F-}}%{{B-}}"
+        "%{{B{}}}%{{F{}}}%{{T{}}}  %{{T-}}%{{F-}}%{{B-}}%{{A}}%{{A}}"
+    ).format(bg, fg, font, bg, fg, font, text, bg, fg, font)
     assert decorated_text == expected_result
 
 

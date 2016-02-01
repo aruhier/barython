@@ -1,8 +1,6 @@
 
 import datetime
 import pytest
-import threading
-import time
 
 from barython.widgets.clock import ClockWidget
 

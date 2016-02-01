@@ -53,15 +53,22 @@ class Widget():
             )
         except (TypeError, AttributeError):
             joined_actions = ""
-        return (9*"{}").format(
+        # if colors are reset in text, padding will not have the good colors
+        if padding:
+            padding_str = self.decorate(padding * " ", fg=fg, bg=bg, font=font)
+        else:
+            padding_str = ""
+        return (11*"{}").format(
             joined_actions,
+            padding_str,
             "%{{B{}}}".format(bg) if bg else "",
             "%{{F{}}}".format(fg) if fg else "",
             "%{{T{}}}".format(font) if font else "",
-            text.center(len(text) + 2*padding),
+            text,
             "%{{T-}}".format(font) if font else "",
             "%{F-}" if fg else "",
             "%{B-}" if bg else "",
+            padding_str,
             "%{A}" * len(actions) if actions else "",
         )
 
