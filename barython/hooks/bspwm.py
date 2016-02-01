@@ -16,26 +16,26 @@ class BspwmHook(SubprocessHook):
         """
         Parse event and return a kwargs meant be used by notify() then
         """
-        notify_kwargs = OrderedDict()
+        monitors = OrderedDict()
         # remove the "W" at the begining of the status
         status = event[1:]
         parsed_status = status.split(":")
         for i in parsed_status:
             if i.startswith("M"):
                 # focused monitor
-                notify_kwargs[i[1:]] = {"focused": True, "desktops": []}
+                monitors[i[1:]] = {"focused": True, "desktops": []}
             elif i.startswith("m"):
                 # unfocused monitor
-                notify_kwargs[i[1:]] = {"focused": False, "desktops": []}
+                monitors[i[1:]] = {"focused": False, "desktops": []}
             elif i.startswith(("O", "o", "F", "f", "U", "u")):
                 # desktop
-                last_monitor = tuple(notify_kwargs.keys())[-1]
-                notify_kwargs[last_monitor]["desktops"].append(i)
+                last_monitor = tuple(monitors.keys())[-1]
+                monitors[last_monitor]["desktops"].append(i)
             elif i.startswith("L"):
                 # layout
-                last_monitor = tuple(notify_kwargs.keys())[-1]
-                notify_kwargs[last_monitor]["layout"] = i[1:]
-        return notify_kwargs
+                last_monitor = tuple(monitors.keys())[-1]
+                monitors[last_monitor]["layout"] = i[1:]
+        return {"monitors": monitors}
 
     def __init__(self, cmd=["bspc", "control", "--subscribe"],
                  *args, **kwargs):
