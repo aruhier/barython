@@ -19,4 +19,4 @@ def test_bspwm_hook_parse_event():
         ('DVI-I-0', {'desktops': ['Od'], 'focused': False, 'layout': 'T'})
     ])
 
-    assert expected == bh.parse_event(status)
+    assert expected == bh.parse_event(status)["monitors"]
