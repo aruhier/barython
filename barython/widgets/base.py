@@ -147,16 +147,18 @@ class Widget():
         self.infinite = infinite
 
         self._lock_start = threading.Condition()
+        self._lock_update = threading.Condition()
 
 
 class TextWidget(Widget):
     text = ""
 
     def update(self):
-        new_content = self.decorate_with_self_attributes(
-            self.organize_result(self.text)
-        )
-        self._update_screens(new_content)
+        with self._lock_update:
+            new_content = self.decorate_with_self_attributes(
+                self.organize_result(self.text)
+            )
+            self._update_screens(new_content)
 
     def start(self):
         with self._lock_start:
@@ -272,14 +274,15 @@ class SubprocessWidget(ThreadedWidget):
             pass
 
     def update(self, *args, **kwargs):
-        self._subproc = self._init_subprocess(self.cmd)
-        output = self._subproc.stdout.readline()
-        if output != b"":
-            self.handle_result(self.organize_result(
-                output.decode().replace('\n', '').replace('\r', '')
-            ))
-        if self._subproc.poll() is None:
-            self._subproc.terminate()
+        with self._lock_update:
+            self._subproc = self._init_subprocess(self.cmd)
+            output = self._subproc.stdout.readline()
+            if output != b"":
+                self.handle_result(self.organize_result(
+                    output.decode().replace('\n', '').replace('\r', '')
+                ))
+            if self._subproc.poll() is not None:
+                self._subproc = self._subproc.terminate()
 
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
