@@ -79,7 +79,7 @@ class _BarSpawner():
         bar_cmd = getattr(self, "bar_cmd", None) or self.panel.bar_cmd
         self._bar = tools.lemonbar(
             bar_cmd=bar_cmd, geometry=geometry, fonts=self.fonts,
-            fg=self.fg, bg=self.bg
+            fg=self.fg, bg=self.bg, clickable=self.clickable
         )
 
     def start(self):
@@ -107,7 +107,7 @@ class _BarSpawner():
         self.stop_bar()
 
     def __init__(self, offset=None, height=18, geometry=None, fg=None,
-                 bg=None, fonts=None):
+                 bg=None, fonts=None, clickable=10):
         #: used to limit the update
         self._update_lock = threading.Lock()
 
@@ -121,6 +121,7 @@ class _BarSpawner():
         self.fg = fg
         self.bg = bg
         self.fonts = fonts
+        self.clickable = clickable
 
         self.hooks = HooksPool(parent=self)
 

@@ -37,7 +37,7 @@ def lemonbar(bar_cmd="lemonbar", geometry=None, fonts=None, fg=None, bg=None,
     if bg:
         cmd.extend(("-B", bg))
     if clickable:
-        cmd.extend(("-a", clickable))
+        cmd.extend(("-a", "{}".format(clickable)))
     if others:
         cmd.extend(others)
     logging.debug("Launch {}".format(cmd))
