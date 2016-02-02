@@ -19,6 +19,12 @@ class BspwmDesktopWidget(Widget):
         )
         self._update_screens(new_content)
 
+    def _actions_desktop(self, desktop):
+        return {1: "bspc desktop -f {}".format(desktop)}
+
+    def _actions_monitor(self, monitor):
+        return {1: "bspc monitor -f {}".format(monitor)}
+
     def _parse_and_decorate(self, infos):
         for m, prop in infos.items():
             if len(list(infos.keys())) > 1:
@@ -26,13 +32,15 @@ class BspwmDesktopWidget(Widget):
                     yield self.decorate(
                         m, fg=self.fg_focused_monitor or self.fg,
                         bg=self.bg_focused_monitor or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_monitor(m),
                     )
                 else:
                     yield self.decorate(
                         m, fg=self.fg_monitor or self.fg,
                         bg=self.bg_monitor or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_monitor(m),
                     )
             for d in prop["desktops"]:
                 d_name = d[1:]
@@ -40,37 +48,43 @@ class BspwmDesktopWidget(Widget):
                     yield self.decorate(
                         d_name, fg=self.fg_focused_occupied or self.fg,
                         bg=self.bg_focused_occupied or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
                 elif d.startswith("o"):
                     yield self.decorate(
                         d_name, fg=self.fg_occupied or self.fg,
                         bg=self.bg_occupied or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
                 elif d.startswith("F"):
                     yield self.decorate(
                         d_name, fg=self.fg_focused_free or self.fg,
                         bg=self.bg_focused_free or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
                 elif d.startswith("f"):
                     yield self.decorate(
                         d_name, fg=self.fg_free or self.fg,
                         bg=self.bg_free or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
                 elif d.startswith("U"):
                     yield self.decorate(
                         d_name, fg=self.fg_focused_urgent or self.fg,
                         bg=self.bg_focused_urgent or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
                 elif d.startswith("u"):
                     yield self.decorate(
                         d_name, fg=self.fg_urgent or self.fg,
                         bg=self.bg_urgent or self.bg,
-                        padding=self.padding
+                        padding=self.padding,
+                        actions=self._actions_desktop(d_name),
                     )
 
     def organize_result(self, monitors, *args, **kwargs):
