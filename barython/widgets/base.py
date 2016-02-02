@@ -36,7 +36,7 @@ class Widget():
     def refresh(self, value):
         self._refresh = value
 
-    def decorate(self, text, fg=None, bg=None, padding=0, font=None,
+    def decorate(self, text, fg=None, bg=None, padding=0, font=None, icon=None,
                  actions=None):
         """
         Decorate a text with custom properties
@@ -58,12 +58,13 @@ class Widget():
             padding_str = self.decorate(padding * " ", fg=fg, bg=bg, font=font)
         else:
             padding_str = ""
-        return (11*"{}").format(
+        return (12*"{}").format(
             joined_actions,
             padding_str,
             "%{{B{}}}".format(bg) if bg else "",
             "%{{F{}}}".format(fg) if fg else "",
             "%{{T{}}}".format(font) if font else "",
+            icon + " " if icon else "",
             text,
             "%{{T-}}".format(font) if font else "",
             "%{F-}" if fg else "",
@@ -94,7 +95,8 @@ class Widget():
         Organize the panel without handling the decoration (fg, bg, etc…)
         Override this method to change the way the info is printed
         """
-        return "".join(*args)
+        result = "{} ".format(self.icon) if self.icon else ""
+        return result + "".join(*args)
 
     def _update_screens(self, new_content):
         """
@@ -117,7 +119,7 @@ class Widget():
     def stop(self, *args, **kwargs):
         pass
 
-    def __init__(self, bg=None, fg=None, padding=0, fonts=None,
+    def __init__(self, bg=None, fg=None, padding=0, fonts=None, icon="",
                  actions=None, refresh=-1, screens=None, infinite=False):
         #: background for the widget
         self.bg = bg
@@ -127,6 +129,10 @@ class Widget():
 
         #: list of fonts index used
         self.fonts = fonts if fonts is not None else tuple()
+
+        #: icon to use. Can be a string or a dict for some widgets, where icon
+        #  will depend about the current value.
+        self.icon = icon
 
         #: dictionnary of actions
         self.actions = actions if actions is not None else dict()

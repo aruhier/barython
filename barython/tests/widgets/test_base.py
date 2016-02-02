@@ -57,7 +57,7 @@ def test_base_widget_decorate_self_attributes_empty():
     w = Widget()
     kwargs = {
         "text": "test", "fg": "#FFFF11", "bg": "#FF9021", "font": 1,
-        "padding": 2, "actions": {1: "firefox", 3: "urxvt"},
+        "padding": 2, "actions": {1: "firefox", 3: "urxvt"}, "icon": "\uf04c",
     }
 
     assert w.decorate_with_self_attributes(**kwargs) == w.decorate(**kwargs)
