@@ -26,6 +26,8 @@ class _Hook(threading.Thread):
             return subprocess.Popen(
                 self.cmd, stdout=subprocess.PIPE, shell=self.shell
             )
+        else:
+            return self._subproc
 
     def parse_event(self, event):
         """
@@ -75,6 +77,7 @@ class SubprocessHook(_Hook):
                     line.decode().replace('\n', '').replace('\r', '')
                 )
                 self.notify(**notify_kwargs)
+                self._subproc = self._init_subproc()
             except Exception as e:
                 logger.error("Error when reading line: {}".format(e))
                 try:
