@@ -177,7 +177,7 @@ class TextWidget(Widget):
 
 
 class ThreadedWidget(Widget):
-    def handle_result(self, output=None, *args, **kwargs):
+    def trigger_global_update(self, output=None, *args, **kwargs):
         new_content = self.decorate_with_self_attributes(output)
         threading.Thread(
             target=self._update_screens, args=(new_content,)
@@ -284,7 +284,7 @@ class SubprocessWidget(ThreadedWidget):
             self._subproc = self._init_subprocess(self.cmd)
             output = self._subproc.stdout.readline()
             if output != b"":
-                self.handle_result(self.organize_result(
+                self.trigger_global_update(self.organize_result(
                     output.decode().replace('\n', '').replace('\r', '')
                 ))
             if self._subproc.poll() is not None:

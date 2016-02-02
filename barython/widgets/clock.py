@@ -13,7 +13,9 @@ class ClockWidget(ThreadedWidget):
             time.sleep(self.refresh)
 
     def update(self, *args, **kwargs):
-            self.handle_result(datetime.now().strftime(self.date_format))
+        self.trigger_global_update(
+            self.organize_result(datetime.now().strftime(self.date_format))
+        )
 
     def __init__(self, date_format="%c", *args, **kwargs):
         super().__init__(*args, **kwargs)
