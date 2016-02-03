@@ -33,6 +33,7 @@ class Panel(_BarSpawner):
             self._screens = new_screen_list
         for s in self._screens:
             s.panel = self
+            self.hooks.merge(s.hooks)
 
     def gather(self):
         """

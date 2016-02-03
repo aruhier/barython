@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import copy as copy_module
 import logging
 import shlex
 import subprocess
@@ -39,7 +40,8 @@ class _Hook(threading.Thread):
         for c in self.callbacks:
             try:
                 threading.Thread(target=c, args=args, kwargs=kwargs).start()
-            except:
+            except Exception as e:
+                logger.debug("Error in hook: {}".format(e))
                 continue
 
     def start(self, *args, **kwargs):
@@ -53,6 +55,14 @@ class _Hook(threading.Thread):
                 self._subproc.terminate()
             except:
                 pass
+
+    def is_compatible(self, hook):
+        return True
+
+    def copy(self):
+        new_h = copy_module.copy(self)
+        new_h.callbacks = self.callbacks.copy()
+        return new_h
 
     def __init__(self, callbacks=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,39 +105,72 @@ class SubprocessHook(_Hook):
 
 
 class HooksPool():
+    def merge_with_panel_or_screen(self):
+        if getattr(self, "parent", None):
+            # if widget, adds to screens
+            if getattr(self.parent, "screens", None):
+                for s in self.parent.screens:
+                    self.parent.s.hooks.merge(self)
+            elif getattr(self.parent, "panel", None):
+                self.parent.panel.hooks.merge(self)
+
     def merge(self, *pools):
         """
         Merge with another pool
         """
+        def merge_hook(h, hook_class):
+            compatible = None
+            self_lst_hook = self.hooks.get(hook_class, None)
+            if self_lst_hook:
+                for self_h in self_lst_hook:
+                    if self_h.is_compatible(h):
+                        compatible = self_h
+                        break
+            else:
+                self.hooks[hook_class] = []
+            if compatible:
+                compatible.callbacks.update(h.callbacks)
+            else:
+                new_h = h.copy()
+                self.hooks[hook_class].append(new_h)
+                if self.listen:
+                    new_h.start()
+
         if not len(pools):
             return
         for pool in pools:
             for hook_class, hook in pool.hooks.items():
-                for c in hook.callbacks:
-                    self.subscribe(c, hook_class)
+                for h in hook:
+                    merge_hook(h, hook_class)
 
-    def subscribe(self, callback, *events):
+    def subscribe(self, callback, event, *args, **kwargs):
         """
-        Subscribe to events, listened by the panel
+        Subscribe to event, listened on by the panel
         """
-        for e in events:
-            if self.hooks.get(e, None) is None:
-                hook = e(callbacks={callback, })
-                self.hooks[e] = hook
-                if self.listen:
-                    hook.start()
-            else:
-                self.hooks[e].callbacks.add(callback)
-        is_attached_to_panel = (
-            getattr(self, "parent", None) and
-            getattr(self.parent, "panel", None)
-        )
-        if is_attached_to_panel:
-            self.parent.panel.hooks.subscribe(callback, *events)
+        existing_hook = self.hooks.get(event, None)
+        # check if our current *args and **kwargs are compatibles with the
+        # existing hook, if any. If not, construct a new hook
+        hook = event(*args, **kwargs, callbacks={callback, })
+        compatible = None
+        if existing_hook:
+            for h in existing_hook:
+                if h.is_compatible(hook):
+                    compatible = h
+                    break
+        else:
+            self.hooks[event] = []
+        if compatible:
+            compatible.callbacks.add(callback)
+        else:
+            self.hooks[event].append(hook)
+            if self.listen:
+                hook.start()
+        self.merge_with_panel_or_screen()
 
     def stop(self):
         for hook in self.hooks.values():
-            hook.stop()
+            for h in hook:
+                h.stop()
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
         #: Actually listen on these events or not
