@@ -2,9 +2,9 @@
 
 import logging
 import mpd
-import time
 
 from .base import ThreadedWidget
+from barython.hooks.mpd import MPDHook
 
 
 logger = logging.getLogger("barython")
@@ -34,14 +34,6 @@ class MPDWidget(ThreadedWidget):
 
     def password(self, value):
         self._mpdclient.password(value)
-
-    def continuous_update(self):
-        while True and not self._stop.is_set():
-            try:
-                self.update()
-                time.sleep(self.refresh)
-            except:
-                time.sleep(self.refresh)
 
     def organize_result(self, status=None, current=None, running=True,
                         *args, **kwargs):
@@ -76,8 +68,13 @@ class MPDWidget(ThreadedWidget):
     def __init__(self, host="localhost", port=6600, password=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.infinite = False
         self.host = host
         self.port = port
         self._mpdclient = mpd.MPDClient()
         if password:
             self.password(password)
+        self.hooks.subscribe(
+            self.handler, MPDHook, host=self.host, port=self.port,
+            password=password, refresh=self.refresh
+        )

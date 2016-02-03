@@ -98,6 +98,15 @@ class Widget():
 
         return self.decorate(text, **d_kwargs)
 
+    @protect_handler
+    def handler(self, *args, **kwargs):
+        """
+        To use with hooks
+        """
+        with self._lock_update:
+            self.update()
+            time.sleep(self.refresh)
+
     def organize_result(self, *args, **kwargs):
         """
         Organize the info to show with the splitted infos received
