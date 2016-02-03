@@ -105,7 +105,7 @@ class Widget():
         if self._content != new_content:
             self._content = new_content
             for screen in self.screens:
-                screen.update()
+                threading.Thread(target=screen.update).start()
 
     def continuous_update(self):
         pass
@@ -179,9 +179,7 @@ class TextWidget(Widget):
 class ThreadedWidget(Widget):
     def trigger_global_update(self, output=None, *args, **kwargs):
         new_content = self.decorate_with_self_attributes(output)
-        threading.Thread(
-            target=self._update_screens, args=(new_content,)
-        ).start()
+        self._update_screens(new_content)
 
     def continuous_update(self, *args, **kwargs):
         while True and not self._stop.is_set():
