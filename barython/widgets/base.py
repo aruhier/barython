@@ -13,6 +13,16 @@ from barython.hooks import HooksPool
 logger = logging.getLogger("barython")
 
 
+def protect_handler(handler):
+    def handler_wrapper(self, *args, **kwargs):
+        if not self._refresh_lock.acquire(blocking=False):
+            return
+        result = handler(self, *args, **kwargs)
+        self._refresh_lock.release()
+        return result
+    return handler_wrapper
+
+
 class Widget():
     """
     Basic Widget
@@ -154,6 +164,7 @@ class Widget():
 
         self._lock_start = threading.Condition()
         self._lock_update = threading.Condition()
+        self._refresh_lock = threading.Semaphore(2)
 
 
 class TextWidget(Widget):

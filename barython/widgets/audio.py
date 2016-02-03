@@ -2,8 +2,9 @@
 
 from bisect import bisect_left
 import logging
+import time
 
-from .base import SubprocessWidget
+from .base import SubprocessWidget, protect_handler
 from barython.hooks.audio import PulseAudioHook
 
 
@@ -32,6 +33,7 @@ class PulseAudioWidget(SubprocessWidget):
     def icon(self, value):
         self._icon = value
 
+    @protect_handler
     def handler(self, event, *args, **kwargs):
         """
         Filter events sent by notifications
@@ -40,7 +42,9 @@ class PulseAudioWidget(SubprocessWidget):
         event_change_msg = "Event 'change' on destination"
         if event_change_msg in event:
             logger.debug("PA: line \"{}\" catched.".format(event))
-            return self.update()
+            with self._lock_update:
+                self.update()
+                time.sleep(self.refresh)
 
     def organize_result(self, output, *args, **kwargs):
         """

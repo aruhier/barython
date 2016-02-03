@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
+import time
 
-from .base import Widget
+from .base import Widget, protect_handler
 from barython.hooks.bspwm import BspwmHook
 
 
@@ -10,6 +11,7 @@ logger = logging.getLogger("barython")
 
 
 class BspwmDesktopWidget(Widget):
+    @protect_handler
     def handler(self, monitors, *args, **kwargs):
         """
         Filter events sent by notifications
@@ -17,7 +19,9 @@ class BspwmDesktopWidget(Widget):
         new_content = self.decorate_with_self_attributes(
             self.organize_result(monitors)
         )
-        self._update_screens(new_content)
+        with self._lock_update:
+            self._update_screens(new_content)
+            time.sleep(self.refresh)
 
     def _actions_desktop(self, desktop):
         return {1: "bspc desktop -f {}".format(desktop)}
