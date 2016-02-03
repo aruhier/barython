@@ -12,24 +12,6 @@ logger = logging.getLogger("barython")
 
 
 class _Hook(threading.Thread):
-    _subproc = None
-
-    def _init_subproc(self):
-        """
-        Init a subproc to listen on an event
-        """
-        process_dead = (
-            self._subproc is None or
-            self._subproc.poll() is not None
-        )
-        if process_dead:
-            logger.debug("Launching {}".format(" ".join(self.cmd)))
-            return subprocess.Popen(
-                self.cmd, stdout=subprocess.PIPE, shell=self.shell
-            )
-        else:
-            return self._subproc
-
     def parse_event(self, event):
         """
         Parse event and return a kwargs meant be used by notify() then
@@ -47,14 +29,6 @@ class _Hook(threading.Thread):
     def start(self, *args, **kwargs):
         self._stop.clear()
         return super().start(*args, **kwargs)
-
-    def stop(self):
-        self._stop.set()
-        if self._subproc:
-            try:
-                self._subproc.terminate()
-            except:
-                pass
 
     def is_compatible(self, hook):
         return True
@@ -78,6 +52,24 @@ class _Hook(threading.Thread):
 
 
 class SubprocessHook(_Hook):
+    _subproc = None
+
+    def _init_subproc(self):
+        """
+        Init a subproc to listen on an event
+        """
+        process_dead = (
+            self._subproc is None or
+            self._subproc.poll() is not None
+        )
+        if process_dead:
+            logger.debug("Launching {}".format(" ".join(self.cmd)))
+            return subprocess.Popen(
+                self.cmd, stdout=subprocess.PIPE, shell=self.shell
+            )
+        else:
+            return self._subproc
+
     def run(self):
         self._subproc = self._init_subproc()
         while not self._stop.is_set():
@@ -95,6 +87,14 @@ class SubprocessHook(_Hook):
                 except:
                     pass
                 self._subproc = self._init_subproc()
+
+    def stop(self):
+        self._stop.set()
+        if self._subproc:
+            try:
+                self._subproc.terminate()
+            except:
+                pass
 
     def __init__(self, cmd, *args, **kwargs):
         super().__init__(*args, **kwargs)

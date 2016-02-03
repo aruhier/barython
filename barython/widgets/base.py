@@ -191,11 +191,13 @@ class ThreadedWidget(Widget):
 
     def start(self):
         self._stop.clear()
-        with self._lock_start:
-            if self.infinite:
-                self.continuous_update()
-            else:
-                return self.update()
+        if not self._lock_start.acquire(blocking=False):
+            return
+        if self.infinite:
+            self.continuous_update()
+        else:
+            return self.update()
+        self._lock_start.release()
 
     def stop(self):
         self._stop.set()

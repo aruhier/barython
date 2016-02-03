@@ -107,8 +107,7 @@ class _BarSpawner():
         Stop the screen
         """
         self._stop.set()
-        if self.hooks.listen:
-            self.hooks.stop()
+        self.hooks.stop()
         self.stop_bar()
 
     def restart(self, *args, **kwargs):
