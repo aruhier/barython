@@ -1,6 +1,7 @@
 
 import pytest
 import time
+import threading
 
 from barython.panel import Panel
 from barython.screen import Screen
@@ -41,8 +42,12 @@ def test_base_hooks_pool_subscribe_listen(mocker):
     hp = HooksPool(listen=True)
     hp.subscribe(callback, TestHook)
     assert isinstance(hp.hooks[TestHook][0], TestHook)
-    time.sleep(0.01)
-    callback.assert_called_once_with()
+    try:
+        threading.Thread(target=hp.start).start()
+        time.sleep(0.1)
+        callback.assert_called_once_with()
+    finally:
+        hp.stop()
 
 
 def test_base_hook_copy(mocker):
@@ -77,4 +82,4 @@ def test_base_hooks_with_panel(mocker):
     s.add_widget("l", w0, w1)
     p.add_screen(s)
 
-    assert p.hooks[_Hook][0].callbacks == {callback0, callback1}
+    assert p.hooks.hooks[_Hook][0].callbacks == {callback0, callback1}

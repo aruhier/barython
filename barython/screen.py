@@ -21,7 +21,7 @@ def get_randr_screens():
 
     window = conn.get_setup().roots[0].root
     resources = conn.randr.GetScreenResourcesCurrent(window).reply()
-    outputs = {}
+    outputs = OrderedDict()
 
     for rroutput in resources.outputs:
         try:
@@ -139,7 +139,6 @@ class Screen(_BarSpawner):
         update in case of any change.
         """
         super().start()
-        self._stop.clear()
         try:
             signal.signal(signal.SIGINT, self.stop)
         except ValueError:
@@ -148,8 +147,6 @@ class Screen(_BarSpawner):
         attached_widgets = list(itertools.chain(*self._widgets.values()))
 
         if self.panel.instance_per_screen:
-            if self.name and self.geometry is None:
-                return
             self.init_bar()
         elif len(attached_widgets) == 0:
             # No widget attached, no need to keep this thread opened

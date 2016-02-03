@@ -6,6 +6,7 @@ import signal
 import threading
 
 from barython import _BarSpawner
+from barython.screen import get_randr_screens
 
 
 logger = logging.getLogger("barython")
@@ -24,6 +25,12 @@ class Panel(_BarSpawner):
         :param index: if set, will insert the screens before the specified
                       index (default: None)
         """
+        for s in screens:
+            self.hooks.merge(s.hooks)
+            s.panel = self
+            if not self.instance_per_screen:
+                s.stop_bar()
+
         if index is None:
             self._screens.extend(screens)
         else:
@@ -31,17 +38,28 @@ class Panel(_BarSpawner):
                 self._screens[:index] + list(screens) + self._screens[index:]
             )
             self._screens = new_screen_list
-        for s in self._screens:
-            s.panel = self
-            self.hooks.merge(s.hooks)
 
     def gather(self):
         """
         Gather all widgets content
         """
-        return "%{S+}".join(
-             screen.gather() for screen in self._screens
-        )
+        return "%{S+}".join(screen.gather() for screen in self._screens)
+
+    def clean_screens(self):
+        """
+        Clean unplugged screens
+
+        If instance_per_screen, clean all screens without a geometry, otherwise
+        stop iterating in screens when nb_randr_screens is reached
+        """
+        if self.instance_per_screen:
+            for s in self._screens:
+                if s.geometry:
+                    yield s
+        else:
+            nb_randr_screens = len(get_randr_screens())
+            for screen, i in zip(self._screens, range(nb_randr_screens)):
+                yield screen
 
     def start(self):
         logging.debug("Starts the panel")
@@ -53,12 +71,15 @@ class Panel(_BarSpawner):
             pass
         if not self.instance_per_screen:
             self.init_bar()
-        for screen in self._screens:
+
+        screens = (self.clean_screens()
+                   if not self.keep_unplugged_screens else self._screens)
+        for screen in screens:
             threading.Thread(
                 target=screen.start
             ).start()
         self._stop.wait()
-        for screen in self._screens:
+        for screen in screens:
             screen.stop()
 
     def stop(self, *args, **kwargs):
@@ -67,18 +88,24 @@ class Panel(_BarSpawner):
             screen.stop()
 
     def __init__(self, instance_per_screen=True, geometry=None, refresh=0.1,
-                 screens=None, *args, **kwargs):
+                 screens=None, keep_unplugged_screens=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.hooks.listen = True
+
+        #: screens attached to this panel
+        self._screens = []
+        if screens:
+            self.add_screen(*screens)
+
         #: launch one bar per screen or use only one with %{S+}
         self.instance_per_screen = instance_per_screen
+
+        #: doesn't start undetected/unplugged screens
+        self.keep_unplugged_screens = keep_unplugged_screens
 
         #: refresh rate
         self.refresh = refresh
 
-        #: screens attached to this panel
-        self._screens = screens if screens is not None else []
-
         #: geometry
         self.geometry = geometry
-
-        self.hooks.listen = True

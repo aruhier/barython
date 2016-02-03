@@ -110,38 +110,37 @@ class HooksPool():
             # if widget, adds to screens
             if getattr(self.parent, "screens", None):
                 for s in self.parent.screens:
-                    self.parent.s.hooks.merge(self)
+                    s.hooks.merge(self)
             elif getattr(self.parent, "panel", None):
                 self.parent.panel.hooks.merge(self)
+
+    def merge_hook(self, h, hook_class):
+        compatible = None
+        self_lst_hook = self.hooks.get(hook_class, None)
+        if self_lst_hook:
+            for self_h in self_lst_hook:
+                if self_h.is_compatible(h):
+                    compatible = self_h
+                    break
+        else:
+            self.hooks[hook_class] = []
+        if compatible:
+            compatible.callbacks.update(h.callbacks)
+        else:
+            new_h = h.copy()
+            self.hooks[hook_class].append(new_h)
 
     def merge(self, *pools):
         """
         Merge with another pool
         """
-        def merge_hook(h, hook_class):
-            compatible = None
-            self_lst_hook = self.hooks.get(hook_class, None)
-            if self_lst_hook:
-                for self_h in self_lst_hook:
-                    if self_h.is_compatible(h):
-                        compatible = self_h
-                        break
-            else:
-                self.hooks[hook_class] = []
-            if compatible:
-                compatible.callbacks.update(h.callbacks)
-            else:
-                new_h = h.copy()
-                self.hooks[hook_class].append(new_h)
-                if self.listen:
-                    new_h.start()
-
         if not len(pools):
             return
         for pool in pools:
             for hook_class, hook in pool.hooks.items():
                 for h in hook:
-                    merge_hook(h, hook_class)
+                    self.merge_hook(h, hook_class)
+        self.merge_with_panel_or_screen()
 
     def subscribe(self, callback, event, *args, **kwargs):
         """
@@ -153,24 +152,25 @@ class HooksPool():
         hook = event(*args, **kwargs, callbacks={callback, })
         compatible = None
         if existing_hook:
-            for h in existing_hook:
-                if h.is_compatible(hook):
-                    compatible = h
-                    break
+            for h in (h for h in existing_hook if h.is_compatible(hook)):
+                compatible = h
+                break
         else:
             self.hooks[event] = []
         if compatible:
             compatible.callbacks.add(callback)
         else:
             self.hooks[event].append(hook)
-            if self.listen:
-                hook.start()
         self.merge_with_panel_or_screen()
 
+    def start(self):
+        if self.listen:
+            for h in (h for hook in self.hooks.values() for h in hook):
+                h.start()
+
     def stop(self):
-        for hook in self.hooks.values():
-            for h in hook:
-                h.stop()
+        for h in (h for hook in self.hooks.values() for h in hook):
+            h.stop()
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
         #: Actually listen on these events or not

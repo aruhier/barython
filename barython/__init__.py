@@ -13,25 +13,27 @@ logger = logging.getLogger("barython")
 class _BarSpawner():
     _cache = None
 
+    def _write_in_bar(self, content):
+        self._bar.stdin.write(content)
+        logger.debug("Writing {}".format(content))
+        self._bar.stdin.flush()
+
     def draw(self):
         """
         Draws the bar on the screen
         """
-        def write_in_bar(content):
-            self._bar.stdin.write(content)
-            logger.debug("Writing {}".format(content))
-            self._bar.stdin.flush()
-
         content = (self.gather() + "\n").encode()
         if self._cache == content:
             return
         self._cache = content
-        try:
-            write_in_bar(content)
-        except (BrokenPipeError, AttributeError):
-            logger.info("Lemonbar is off, init it")
-            self.init_bar()
-            write_in_bar(content)
+        # if stopped, do not init lemonbar
+        if not self._stop.is_set():
+            try:
+                self._write_in_bar(content)
+            except (BrokenPipeError, AttributeError):
+                logger.info("Lemonbar is off, init it")
+                self.init_bar()
+                self._write_in_bar(content)
 
     def gather(self):
         """
@@ -84,6 +86,8 @@ class _BarSpawner():
 
     def start(self):
         self._cache = None
+        self._stop.clear()
+        self.hooks.start()
 
     def stop_bar(self, kill=False):
         """
@@ -94,6 +98,7 @@ class _BarSpawner():
                 self._bar.kill()
             else:
                 self._bar.terminate()
+            self._bar = None
         except:
             pass
 
@@ -106,6 +111,10 @@ class _BarSpawner():
             self.hooks.stop()
         self.stop_bar()
 
+    def restart(self, *args, **kwargs):
+        self.stop()
+        threading.Thread(target=self.start).start()
+
     def __init__(self, offset=None, height=18, geometry=None, fg=None,
                  bg=None, fonts=None, clickable=10):
         #: used to limit the update
@@ -114,6 +123,7 @@ class _BarSpawner():
         self._refresh_lock = threading.Semaphore(2)
         #: event to stop the screen
         self._stop = threading.Event()
+        self._stop.set()
 
         self.height = height
         self.offset = offset if offset is not None else (0, 0, 0)
