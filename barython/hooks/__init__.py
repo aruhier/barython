@@ -27,8 +27,11 @@ class _Hook(threading.Thread):
                 continue
 
     def start(self, *args, **kwargs):
-        self._stop.clear()
+        self._stop_event.clear()
         return super().start(*args, **kwargs)
+
+    def stop(self, *args, **kwargs):
+        self._stop_event.set()
 
     def is_compatible(self, hook):
         return True
@@ -40,15 +43,16 @@ class _Hook(threading.Thread):
 
     def __init__(self, callbacks=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.daemon = True
+        self.daemon = False
 
         #: list of callbacks to use during when notify
         self.callbacks = set()
         if callbacks is not None:
             self.callbacks.update(callbacks)
 
-        #: event to stop the screen
-        self._stop = threading.Event()
+        #: event to stop the screen. _stop_event because _stop interfers with
+        #  the Thread attribute
+        self._stop_event = threading.Event()
 
 
 class SubprocessHook(_Hook):
@@ -58,6 +62,8 @@ class SubprocessHook(_Hook):
         """
         Init a subproc to listen on an event
         """
+        if self._stop_event.is_set():
+            return None
         process_dead = (
             self._subproc is None or
             self._subproc.poll() is not None
@@ -71,30 +77,31 @@ class SubprocessHook(_Hook):
             return self._subproc
 
     def run(self):
-        self._subproc = self._init_subproc()
-        while not self._stop.is_set():
+        while not self._stop_event.is_set():
             try:
+                self._subproc = self._init_subproc()
                 line = self._subproc.stdout.readline()
                 notify_kwargs = self.parse_event(
                     line.decode().replace('\n', '').replace('\r', '')
                 )
                 self.notify(**notify_kwargs)
-                self._subproc = self._init_subproc()
             except Exception as e:
                 logger.error("Error when reading line: {}".format(e))
                 try:
-                    self._subproc.kill()
+                    self._subproc = self._subproc.kill()
                 except:
                     pass
-                self._subproc = self._init_subproc()
+        try:
+            self._subproc = self._subproc.kill()
+        except:
+            pass
 
     def stop(self):
-        self._stop.set()
-        if self._subproc:
-            try:
-                self._subproc.terminate()
-            except:
-                pass
+        super().stop()
+        try:
+            self._subproc = self._subproc.kill()
+        except:
+            self._subproc = None
 
     def __init__(self, cmd, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -170,7 +177,10 @@ class HooksPool():
 
     def stop(self):
         for h in (h for hook in self.hooks.values() for h in hook):
-            h.stop()
+            try:
+                h.stop()
+            except:
+                continue
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
         #: Actually listen on these events or not

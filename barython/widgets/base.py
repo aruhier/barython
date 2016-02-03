@@ -233,6 +233,8 @@ class SubprocessWidget(ThreadedWidget):
         """
         Start cmd in a subprocess, and split it if needed
         """
+        if self._stop.is_set():
+            return None
         if isinstance(cmd, str):
             cmd = shlex.split(cmd)
         logger.debug("Launching {}".format(" ".join(cmd)))
@@ -293,11 +295,11 @@ class SubprocessWidget(ThreadedWidget):
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
         try:
-            self._subscribe_subproc.terminate()
+            self._subscribe_subproc = self._subscribe_subproc.terminate()
         except:
             pass
         try:
-            self._subproc.terminate()
+            self._subproc = self._subproc.terminate()
         except:
             pass
 

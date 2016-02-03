@@ -68,6 +68,8 @@ class _BarSpawner():
         Before starting, tries to terminate self._bar in case of refresh
         """
         self.stop_bar()
+        if self._stop.is_set():
+            return None
         screen_geometry = self.geometry
         if screen_geometry:
             w, h, x, y = screen_geometry
@@ -107,7 +109,6 @@ class _BarSpawner():
         Stop the screen
         """
         self._stop.set()
-        self.hooks.stop()
         self.stop_bar()
 
     def restart(self, *args, **kwargs):

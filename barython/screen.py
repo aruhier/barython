@@ -3,7 +3,6 @@
 from collections import OrderedDict
 import itertools
 import logging
-import signal
 import threading
 import xcffib
 import xcffib.xproto
@@ -139,10 +138,6 @@ class Screen(_BarSpawner):
         update in case of any change.
         """
         super().start()
-        try:
-            signal.signal(signal.SIGINT, self.stop)
-        except ValueError:
-            pass
 
         attached_widgets = list(itertools.chain(*self._widgets.values()))
 
@@ -165,7 +160,15 @@ class Screen(_BarSpawner):
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
         for widget in itertools.chain(*self._widgets.values()):
-            widget.stop()
+            try:
+                widget.stop()
+            except:
+                continue
+        if self.hooks.listen:
+            try:
+                self.hooks.stop()
+            except:
+                pass
 
     def __init__(self, name=None, refresh=-1, clickable=-1, geometry=None,
                  panel=None, *args, **kwargs):
