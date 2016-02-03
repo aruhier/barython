@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+import logging
 import mpd
 import time
 
 from .base import ThreadedWidget
+
+
+logger = logging.getLogger("barython")
 
 
 class MPDWidget(ThreadedWidget):
@@ -48,6 +52,8 @@ class MPDWidget(ThreadedWidget):
         icon = self.icon
         if current:
             artist, title = current["artist"], current["title"]
+        if not running:
+            return "{}".format(icon) if icon else ""
         if icon:
             return (
                 "{} {} - {}".format(icon, artist, title)
@@ -61,7 +67,8 @@ class MPDWidget(ThreadedWidget):
             return self.trigger_global_update(
                 self.organize_result(status=self.status, current=self.current)
             )
-        except mpd.ConnectionError:
+        except:
+            logger.debug("MPD is not running or cannot be joined")
             return self.trigger_global_update(
                 self.organize_result(running=False)
             )
