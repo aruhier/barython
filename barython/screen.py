@@ -45,8 +45,19 @@ def get_randr_screens():
 
 class Screen(_BarSpawner):
     @property
+    def clickable(self):
+        if self._clickable == -1 and self.panel is not None:
+            return self.panel.clickable
+        else:
+            return self._clickable
+
+    @clickable.setter
+    def clickable(self, value):
+        self._clickable = value
+
+    @property
     def refresh(self):
-        if self._refresh == 0 and self.panel is not None:
+        if self._refresh == -1 and self.panel is not None:
             return self.panel.refresh
         else:
             return self._refresh
@@ -159,8 +170,8 @@ class Screen(_BarSpawner):
         for widget in itertools.chain(*self._widgets.values()):
             widget.stop()
 
-    def __init__(self, name=None, refresh=0, geometry=None, panel=None,
-                 *args, **kwargs):
+    def __init__(self, name=None, refresh=-1, clickable=-1, geometry=None,
+                 panel=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         #: screen name
@@ -168,6 +179,9 @@ class Screen(_BarSpawner):
 
         #: refresh rate
         self._refresh = refresh
+
+        #: clickable items (for lemonbar)
+        self.clickable = clickable
 
         self.panel = panel
 

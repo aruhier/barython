@@ -15,14 +15,14 @@ def test_screen_refresh():
     """
     Test if a Screen object get the refresh of its panel if not set
     """
-    s = Screen(refresh=0)
-    assert s.refresh == 0
+    s = Screen(refresh=-1)
+    assert s.refresh == -1
 
     s.refresh = 1
     assert s.refresh == 1
 
     p = Panel(refresh=2)
-    s.refresh = 0
+    s.refresh = -1
     s.panel = p
     assert s.refresh == p.refresh
     assert s.refresh == 2
