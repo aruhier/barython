@@ -83,6 +83,7 @@ def test_base_lock_update(mocker):
     Test that only one update is running at a time by widget
     """
     p = Panel(instance_per_screen=False)
+    p.init_bar = mocker.stub()
     w = SubprocessWidget(cmd="echo Test", refresh=0.2)
     for i in range(0, 4):
         s = Screen()
@@ -92,7 +93,7 @@ def test_base_lock_update(mocker):
 
     try:
         threading.Thread(target=p.start).start()
-        time.sleep(1)
+        time.sleep(0.3)
         assert w.continuous_update.call_count == 1
     finally:
         p.stop()
