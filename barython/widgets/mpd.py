@@ -54,6 +54,13 @@ class MPDWidget(ThreadedWidget):
         else:
             return "{} - {}".format(artist, title)
 
+    def handler(self, event=None, run=True, *args, **kwargs):
+        if not run:
+            return self.trigger_global_update(
+                self.organize_result(running=False)
+            )
+        return super().handler(event=event, run=run, *args, **kwargs)
+
     def update(self, *args, **kwargs):
         try:
             return self.trigger_global_update(

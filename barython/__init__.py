@@ -14,6 +14,8 @@ class _BarSpawner():
     _cache = None
 
     def _write_in_bar(self, content):
+        if self._stop.is_set():
+            return
         self._bar.stdin.write(content)
         logger.debug("Writing {}".format(content))
         self._bar.stdin.flush()
@@ -100,6 +102,7 @@ class _BarSpawner():
                 self._bar.kill()
             else:
                 self._bar.terminate()
+                self._bar.wait()
             self._bar = None
         except:
             pass

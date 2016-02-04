@@ -65,6 +65,7 @@ class Panel(_BarSpawner):
         logging.debug("Starts the panel")
         try:
             signal.signal(signal.SIGINT, self.stop)
+            signal.signal(signal.SIGTERM, self.stop)
         except ValueError:
             pass
         super().start()

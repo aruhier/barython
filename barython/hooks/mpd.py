@@ -29,14 +29,20 @@ class MPDHook(_Hook):
                     # test the connection and notify to force printing the
                     # current song, as idle() will wait for any change in mpd
                     self._mpdclient.ping()
-                    self.notify(**self.parse_event(run=True))
+                    try:
+                        self.notify(**self.parse_event(run=True))
+                    except Exception as e:
+                        logger.error(e)
                     killed = False
                 else:
                     # wait for any change in mpd and then notify
                     notify_kwargs = self.parse_event(
                         self._mpdclient.idle()
                     )
-                    self.notify(**notify_kwargs)
+                    try:
+                        self.notify(**notify_kwargs)
+                    except Exception as e:
+                        logger.error(e)
             except:
                 killed = True
                 try:
@@ -47,7 +53,10 @@ class MPDHook(_Hook):
                     )
                     try:
                         notify_kwargs = self.parse_event(run=False)
-                        self.notify(**notify_kwargs)
+                        try:
+                            self.notify(**notify_kwargs)
+                        except Exception as e:
+                            logger.error(e)
                     except:
                         pass
                 finally:

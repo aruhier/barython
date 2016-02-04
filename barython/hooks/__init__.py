@@ -99,7 +99,8 @@ class SubprocessHook(_Hook):
     def stop(self):
         super().stop()
         try:
-            self._subproc = self._subproc.kill()
+            self._subproc.terminate()
+            self._subproc = self._subproc.wait()
         except:
             self._subproc = None
 

@@ -315,11 +315,13 @@ class SubprocessWidget(ThreadedWidget):
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
         try:
-            self._subscribe_subproc = self._subscribe_subproc.terminate()
+            self._subscribe_subproc.terminate()
+            self._subscribe_subproc = self._subscribe_subproc.wait()
         except:
             pass
         try:
             self._subproc = self._subproc.terminate()
+            self._subproc = self._subproc.wait()
         except:
             pass
 
