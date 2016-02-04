@@ -31,5 +31,6 @@ def safe_import(module_name, class_name):
 
 
 safe_import(".audio", "PulseAudioWidget")
-safe_import(".base", "TextWidget")
 safe_import(".clock", "ClockWidget")
+safe_import(".mpd", "MPDWidget")
+safe_import(".bspwm", "BspwmDesktopWidget")
