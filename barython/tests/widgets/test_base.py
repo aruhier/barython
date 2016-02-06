@@ -14,6 +14,11 @@ def test_base_widget_construction():
            screens=[Screen(), ])
 
 
+def test_base_widget_refresh():
+    w = Widget()
+    assert w.refresh == 0
+
+
 def test_base_widget_decorate_simple():
     """
     Test the decorate function of Widget without any parameter

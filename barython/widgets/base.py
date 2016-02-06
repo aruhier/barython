@@ -37,7 +37,7 @@ class Widget():
 
     @property
     def refresh(self):
-        if self._refresh == -1 and self.screens is not None:
+        if self._refresh == -1 and self.screens:
             return min([screen.refresh for screen in self.screens])
         else:
             return max(0, self._refresh)
