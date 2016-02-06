@@ -18,7 +18,7 @@ class MPDWidget(ThreadedWidget):
     def status(self):
         try:
             r = self._mpdclient.status()["state"]
-        except mpd.ConnectionError:
+        except (mpd.ConnectionError, BrokenPipeError):
             self._mpdclient.connect(self.host, self.port)
             r = self._mpdclient.status()["state"]
         return r
@@ -27,7 +27,7 @@ class MPDWidget(ThreadedWidget):
     def current(self):
         try:
             r = self._mpdclient.currentsong()
-        except mpd.ConnectionError:
+        except (mpd.ConnectionError, BrokenPipeError):
             self._mpdclient.connect(self.host, self.port)
             r = self._mpdclient.currentsong()
         return r
@@ -66,8 +66,10 @@ class MPDWidget(ThreadedWidget):
             return self.trigger_global_update(
                 self.organize_result(status=self.status, current=self.current)
             )
-        except:
-            logger.debug("MPD is not running or cannot be joined")
+        except Exception as e:
+            logger.debug(
+                "MPD is not running or cannot be joined: {}".format(e)
+            )
             return self.trigger_global_update(
                 self.organize_result(running=False)
             )
