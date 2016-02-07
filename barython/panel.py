@@ -68,10 +68,10 @@ class Panel(_BarSpawner):
             signal.signal(signal.SIGTERM, self.stop)
         except ValueError:
             pass
+
         super().start()
+
         self._stop.clear()
-        if not self.instance_per_screen:
-            self.init_bar()
 
         screens = (self.clean_screens()
                    if not self.keep_unplugged_screens else self._screens)
@@ -79,6 +79,11 @@ class Panel(_BarSpawner):
             threading.Thread(
                 target=screen.start
             ).start()
+
+        # update to force drawing the bar
+        if not self.instance_per_screen:
+            self.update(no_wait=True)
+
         self._stop.wait()
 
     def stop(self, *args, **kwargs):

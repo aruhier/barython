@@ -34,6 +34,8 @@ class _BarSpawner():
                 self._write_in_bar(content)
             except (BrokenPipeError, AttributeError):
                 logger.info("Lemonbar is off, init it")
+                if getattr(self, "_bar", None) and self._bar.poll() is None:
+                    self.stop_bar(kill=True)
                 self.init_bar()
                 self._write_in_bar(content)
 
@@ -43,7 +45,7 @@ class _BarSpawner():
         """
         raise NotImplemented
 
-    def update(self):
+    def update(self, no_wait=False):
         """
         Ask to redraw the screen or the global panel
 
@@ -52,6 +54,8 @@ class _BarSpawner():
         ran by the waiting widget).
         A sleep is launched at the end to respect the refresh rate set for this
         Screen.
+
+        :param no_wait: does not wait for the refresh time before leaving
         """
         locked = self._refresh_lock.acquire(blocking=False)
         # More than 2 threads are already here, doesn't make any sense to wait
@@ -69,7 +73,6 @@ class _BarSpawner():
 
         Before starting, tries to terminate self._bar in case of refresh
         """
-        self.stop_bar()
         if self._stop.is_set():
             return None
         screen_geometry = self.geometry

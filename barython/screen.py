@@ -104,7 +104,7 @@ class Screen(_BarSpawner):
         if self.panel.instance_per_screen:
             return super().update(*args, **kwargs)
         else:
-            return self.panel.update()
+            return self.panel.update(*args, **kwargs)
 
     def start(self):
         """
@@ -119,14 +119,13 @@ class Screen(_BarSpawner):
 
         attached_widgets = list(itertools.chain(*self._widgets.values()))
 
-        if self.panel.instance_per_screen:
-            self.init_bar()
-        elif len(attached_widgets) == 0:
+        if not self.panel.instance_per_screen and len(attached_widgets) == 0:
             # No widget attached, no need to keep this thread opened
             # TODO: Add a test for it
             self.content = ""
             self.stop()
             return
+        self.update(no_wait=True)
 
         for widget in attached_widgets:
             threading.Thread(
