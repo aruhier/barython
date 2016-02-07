@@ -113,14 +113,12 @@ class SubprocessHook(_Hook):
 
 
 class HooksPool():
-    def merge_with_panel_or_screen(self):
+    def propage_changes(self):
+        """
+        Propage changes to all parents of the current parent
+        """
         if getattr(self, "parent", None):
-            # if widget, adds to screens
-            if getattr(self.parent, "screens", None):
-                for s in self.parent.screens:
-                    s.hooks.merge(self)
-            elif getattr(self.parent, "panel", None):
-                self.parent.panel.hooks.merge(self)
+            self.parent.propage_hooks_changes()
 
     def merge_hook(self, h, hook_class):
         compatible = None
@@ -148,7 +146,7 @@ class HooksPool():
             for hook_class, hook in pool.hooks.items():
                 for h in hook:
                     self.merge_hook(h, hook_class)
-        self.merge_with_panel_or_screen()
+        self.propage_changes()
 
     def subscribe(self, callback, event, *args, **kwargs):
         """
@@ -169,7 +167,7 @@ class HooksPool():
             compatible.callbacks.add(callback)
         else:
             self.hooks[event].append(hook)
-        self.merge_with_panel_or_screen()
+        self.propage_changes()
 
     def start(self):
         if self.listen:

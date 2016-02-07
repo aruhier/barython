@@ -16,6 +16,11 @@ class Panel(_BarSpawner):
     #: command for lemonbar
     bar_cmd = "lemonbar"
 
+    @property
+    def screens(self):
+        return (self.clean_screens() if not self.keep_unplugged_screens else
+                self._screens)
+
     def add_screen(self, *screens, index=None):
         """
         Add a screen to the panel
@@ -43,7 +48,7 @@ class Panel(_BarSpawner):
         """
         Gather all widgets content
         """
-        return "%{S+}".join(screen.gather() for screen in self._screens)
+        return "%{S+}".join(screen.gather() for screen in self.screens)
 
     def clean_screens(self):
         """
@@ -71,24 +76,20 @@ class Panel(_BarSpawner):
 
         super().start()
 
-        self._stop.clear()
-
-        screens = (self.clean_screens()
-                   if not self.keep_unplugged_screens else self._screens)
-        for screen in screens:
-            threading.Thread(
-                target=screen.start
-            ).start()
-
         # update to force drawing the bar
         if not self.instance_per_screen:
             self.update(no_wait=True)
+
+        for screen in self.screens:
+            threading.Thread(
+                target=screen.start
+            ).start()
 
         self._stop.wait()
 
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
-        for screen in self._screens:
+        for screen in self.screens:
             try:
                 screen.stop()
             except:

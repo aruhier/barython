@@ -106,6 +106,13 @@ class Screen(_BarSpawner):
         else:
             return self.panel.update(*args, **kwargs)
 
+    def propage_hooks_changes(self):
+        """
+        Propage a change in the hooks pool
+        """
+        if getattr(self, "panel", None):
+            self.panel.hooks.merge(self.hooks)
+
     def start(self):
         """
         Start the screen panel

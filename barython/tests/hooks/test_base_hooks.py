@@ -73,7 +73,7 @@ def test_base_hooks_pool_merge(mocker):
 
 def test_base_hooks_with_panel(mocker):
     callback0, callback1 = mocker.stub(), mocker.stub()
-    p = Panel()
+    p = Panel(keep_unplugged_screens=True)
     s = Screen()
     w0, w1 = Widget(), Widget()
     w0.hooks.subscribe(callback0, _Hook)

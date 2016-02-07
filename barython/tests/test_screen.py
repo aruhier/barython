@@ -21,7 +21,7 @@ def test_screen_refresh():
     s.refresh = 1
     assert s.refresh == 1
 
-    p = Panel(refresh=2)
+    p = Panel(refresh=2, keep_unplugged_screens=True)
     s.refresh = -1
     s.panel = p
     assert s.refresh == p.refresh
@@ -91,7 +91,7 @@ def test_screen_geometry(monkeypatch):
 
 
 def test_screen_gather():
-    p = Panel()
+    p = Panel(keep_unplugged_screens=True)
     s = Screen()
     p.add_screen(s)
     w = TextWidget(text="test")
@@ -106,7 +106,7 @@ def test_screen_gather_multiple_widgets():
     """
     Test the gather function with more than one widget
     """
-    p = Panel()
+    p = Panel(keep_unplugged_screens=True)
     s = Screen()
     p.add_screen(s)
     w = TextWidget(text="test")

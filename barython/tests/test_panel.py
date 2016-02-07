@@ -8,24 +8,7 @@ from barython.panel import Panel
 from barython.screen import Screen
 from barython.widgets import ClockWidget
 from barython.widgets.base import TextWidget
-
-
-def disable_spawn_bar(obj):
-    def mock_write_in_bar(self, *args, **kwargs):
-        """
-        Just here to raise AttributeError if self._bar doesn't exist
-        """
-        if not getattr(self, "_bar", None):
-            raise AttributeError
-
-    def mock_init_bar(self, *args, **kwargs):
-        """
-        Just here to raise AttributeError if self._bar doesn't exist
-        """
-        self._bar = True
-
-    obj.init_bar = mock_init_bar
-    obj._write_in_bar = mock_write_in_bar
+from barython.tests.tools import disable_spawn_bar
 
 
 @pytest.fixture
@@ -67,7 +50,7 @@ def test_pannel_add_screen():
     """
     Test to add a screen to a panel
     """
-    p = Panel()
+    p = Panel(keep_unplugged_screens=True)
     assert len(p._screens) == 0
 
     s = Screen()
@@ -79,19 +62,19 @@ def test_pannel_global_instance_add_screen():
     """
     Test to add a screen to a panel
     """
-    p = Panel(instance_per_screen=False)
-    assert len(p._screens) == 0
+    p = Panel(instance_per_screen=False, keep_unplugged_screens=True)
+    assert len(p.screens) == 0
 
     s = Screen()
     p.add_screen(s)
-    assert p._screens[0] == s
+    assert p.screens[0] == s
 
 
 def test_pannel_add_screen_insert():
     """
     Test the screen insertion in a panel, with multiple screens at a time
     """
-    p = Panel()
+    p = Panel(keep_unplugged_screens=True)
     s = Screen()
     s1 = Screen()
     s2 = Screen()
@@ -99,13 +82,13 @@ def test_pannel_add_screen_insert():
     p.add_screen(s, s2)
     p.add_screen(s1, index=1)
 
-    assert len(p._screens) == 3
+    assert len(p.screens) == 3
     for screen, pscreen in zip((s, s1, s2), p._screens):
         assert screen == pscreen
 
 
 def test_panel_gather_no_screen(fixture_useful_screens):
-    p = Panel(instance_per_screen=False)
+    p = Panel(instance_per_screen=False, keep_unplugged_screens=True)
     disable_spawn_bar(p)
     p.gather()
     try:
@@ -117,7 +100,7 @@ def test_panel_gather_no_screen(fixture_useful_screens):
 
 
 def test_panel_gather_one_screen():
-    p = Panel(instance_per_screen=False)
+    p = Panel(instance_per_screen=False, keep_unplugged_screens=True)
     w = TextWidget(text="test")
 
     s = Screen()
@@ -129,7 +112,7 @@ def test_panel_gather_one_screen():
 
 
 def test_panel_gather_multiple_screens():
-    p = Panel(instance_per_screen=False)
+    p = Panel(instance_per_screen=False, keep_unplugged_screens=True)
     w = TextWidget(text="test")
 
     s = Screen()

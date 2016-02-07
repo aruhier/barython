@@ -7,6 +7,7 @@ import timeit
 from barython.screen import Screen
 from barython.panel import Panel
 from barython.widgets.base import SubprocessWidget, TextWidget, Widget
+from barython.tests.tools import disable_spawn_bar
 
 
 def test_base_widget_construction():
@@ -87,8 +88,8 @@ def test_base_lock_update(mocker):
     """
     Test that only one update is running at a time by widget
     """
-    p = Panel(instance_per_screen=False)
-    p.init_bar = mocker.stub()
+    disable_spawn_bar(Panel)
+    p = Panel(instance_per_screen=False, keep_unplugged_screens=True)
     w = SubprocessWidget(cmd="echo Test", refresh=0.2)
     for i in range(0, 4):
         s = Screen()

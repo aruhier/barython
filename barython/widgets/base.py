@@ -132,6 +132,14 @@ class Widget():
     def update(self):
         pass
 
+    def propage_hooks_changes(self):
+        """
+        Propage a change in the hooks pool
+        """
+        if getattr(self, "screens", None):
+            for s in self.screens:
+                s.hooks.merge(self)
+
     def start(self, *args, **kwargs):
         pass
 

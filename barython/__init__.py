@@ -35,6 +35,7 @@ class _BarSpawner():
             except (BrokenPipeError, AttributeError):
                 logger.info("Lemonbar is off, init it")
                 if getattr(self, "_bar", None) and self._bar.poll() is None:
+                    # lemonbar seems to have crashed, kill it
                     self.stop_bar(kill=True)
                 self.init_bar()
                 self._write_in_bar(content)
@@ -64,7 +65,8 @@ class _BarSpawner():
             return
         with self._update_lock:
             self.draw()
-            time.sleep(self.refresh)
+            if not no_wait:
+                time.sleep(self.refresh)
         self._refresh_lock.release()
 
     def init_bar(self):
@@ -90,6 +92,12 @@ class _BarSpawner():
             bar_cmd=bar_cmd, geometry=geometry, fonts=self.fonts,
             fg=self.fg, bg=self.bg, clickable=self.clickable
         )
+
+    def propage_hooks_changes(self):
+        """
+        Propage a change in the hooks pool
+        """
+        pass
 
     def start(self):
         self._cache = None
