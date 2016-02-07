@@ -10,6 +10,52 @@ from barython.widgets import ClockWidget
 from barython.widgets.base import TextWidget
 
 
+def disable_spawn_bar(obj):
+    def mock_write_in_bar(self, *args, **kwargs):
+        """
+        Just here to raise AttributeError if self._bar doesn't exist
+        """
+        if not getattr(self, "_bar", None):
+            raise AttributeError
+
+    def mock_init_bar(self, *args, **kwargs):
+        """
+        Just here to raise AttributeError if self._bar doesn't exist
+        """
+        self._bar = True
+
+    obj.init_bar = mock_init_bar
+    obj._write_in_bar = mock_write_in_bar
+
+
+@pytest.fixture
+def fixture_useful_screens(monkeypatch, mocker):
+    def mock_get_randr_screens(*args, **kwargs):
+        return {"DVI-I-0": (1920, 1080, 50, 60)}
+
+    monkeypatch.setattr(barython.panel, "get_randr_screens",
+                        mock_get_randr_screens)
+    monkeypatch.setattr(barython.screen, "get_randr_screens",
+                        mock_get_randr_screens)
+
+    disable_spawn_bar(Panel)
+    p = Panel(keep_unplugged_screens=False)
+    disable_spawn_bar(Screen)
+    s0, s1 = Screen("DVI-I-0"), Screen("DVI-I-1")
+
+    for i in (p, s0, s1):
+        mocker.spy(i, "start")
+        mocker.spy(i, "init_bar")
+        mocker.spy(i, "_write_in_bar")
+
+    w = TextWidget(text="test")
+    s0.add_widget("l", w)
+    s1.add_widget("l", w)
+
+    p.add_screen(s0, s1)
+    return p, s0, s1
+
+
 def test_panel_no_widget():
     """
     Test the Panel construction
@@ -56,6 +102,18 @@ def test_pannel_add_screen_insert():
     assert len(p._screens) == 3
     for screen, pscreen in zip((s, s1, s2), p._screens):
         assert screen == pscreen
+
+
+def test_panel_gather_no_screen(fixture_useful_screens):
+    p = Panel(instance_per_screen=False)
+    disable_spawn_bar(p)
+    p.gather()
+    try:
+        threading.Thread(target=p.start).start()
+        time.sleep(0.1)
+        assert p.gather() == ""
+    finally:
+        p.stop()
 
 
 def test_panel_gather_one_screen():
@@ -122,49 +180,6 @@ def test_panel_clean_screens_instance_per_screen(monkeypatch):
     p.add_screen(s0, s1)
 
     assert tuple(p.clean_screens()) == (s0, )
-
-
-@pytest.fixture
-def fixture_useful_screens(monkeypatch, mocker):
-    def mock_get_randr_screens(*args, **kwargs):
-        return {"DVI-I-0": (1920, 1080, 50, 60)}
-
-    def mock_write_in_bar(self, *args, **kwargs):
-        """
-        Just here to raise AttributeError if self._bar doesn't exist
-        """
-        if not getattr(self, "_bar", None):
-            raise AttributeError
-
-    def mock_init_bar(self, *args, **kwargs):
-        """
-        Just here to raise AttributeError if self._bar doesn't exist
-        """
-        self._bar = True
-
-    monkeypatch.setattr(barython.panel, "get_randr_screens",
-                        mock_get_randr_screens)
-    monkeypatch.setattr(barython.screen, "get_randr_screens",
-                        mock_get_randr_screens)
-
-    Panel.init_bar = mock_init_bar
-    Panel._write_in_bar = mock_write_in_bar
-    p = Panel(keep_unplugged_screens=False)
-    Screen.init_bar = mock_init_bar
-    Screen._write_in_bar = mock_write_in_bar
-    s0, s1 = Screen("DVI-I-0"), Screen("DVI-I-1")
-
-    for i in (p, s0, s1):
-        mocker.spy(i, "start")
-        mocker.spy(i, "init_bar")
-        mocker.spy(i, "_write_in_bar")
-
-    w = TextWidget(text="test")
-    s0.add_widget("l", w)
-    s1.add_widget("l", w)
-
-    p.add_screen(s0, s1)
-    return p, s0, s1
 
 
 def test_panel_start_useful_screens(fixture_useful_screens, mocker):
