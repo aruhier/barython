@@ -38,10 +38,10 @@ class BspwmDesktopWidget(Widget):
             time.sleep(self.refresh)
 
     def _actions_desktop(self, desktop, *args, **kwargs):
-        return {1: "bspc desktop -f {}".format(desktop)}
+        return {1: "bspc desktop -f \"{}\"".format(desktop)}
 
     def _actions_monitor(self, monitor, *args, **kwargs):
-        return {1: "bspc monitor -f {}".format(monitor)}
+        return {1: "bspc monitor -f \"{}\"".format(monitor)}
 
     def _parse_monitor(self, m, prop):
         decorate_kwargs = {
@@ -170,7 +170,7 @@ class BspwmDesktopPoolWidget(BspwmDesktopWidget):
     always show desktops in the same order (and will not fully respect the
     order returned by bspwm).
     """
-    def _swap_desktop(self, target_d, target_m):
+    def _swap_desktop(self, target_d):
         """
         Swap desktop d of monitor m with the one on the current screen
         """
@@ -184,7 +184,7 @@ class BspwmDesktopPoolWidget(BspwmDesktopWidget):
         if len(self.screens) == 1:
             current_m = next(iter(self.screens)).bspwm_monitor_name
             if current_m != target_m and current_m in self._focused:
-                return self._swap_desktop(target_d, target_m)
+                return self._swap_desktop(target_d)
         # If attached to multiple screens, cannot know on which monitor the
         # widget is shown.
         return super()._actions_desktop(target_d, target_m)
