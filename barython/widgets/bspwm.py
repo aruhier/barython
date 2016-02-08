@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import re
 import time
 
 from .base import Widget, protect_handler
@@ -11,6 +12,9 @@ logger = logging.getLogger("barython")
 
 
 class BspwmDesktopWidget(Widget):
+    """
+    Show monitors and desktops, for bspwm
+    """
     @protect_handler
     def handler(self, monitors, *args, **kwargs):
         """
@@ -23,74 +27,92 @@ class BspwmDesktopWidget(Widget):
             self._update_screens(new_content)
             time.sleep(self.refresh)
 
-    def _actions_desktop(self, desktop):
+    def _actions_desktop(self, desktop, *args, **kwargs):
         return {1: "bspc desktop -f {}".format(desktop)}
 
-    def _actions_monitor(self, monitor):
+    def _actions_monitor(self, monitor, *args, **kwargs):
         return {1: "bspc monitor -f {}".format(monitor)}
+
+    def _parse_monitor(self, m, prop):
+        decorate_kwargs = {
+            "text": m, "padding": self.padding,
+            "actions": self._actions_monitor(m, prop)
+        }
+        if prop["focused"]:
+            return self.decorate(
+                fg=self.fg_focused_monitor or self.fg,
+                bg=self.bg_focused_monitor or self.bg,
+                **decorate_kwargs
+            )
+        else:
+            return self.decorate(
+                fg=self.fg_monitor or self.fg,
+                bg=self.bg_monitor or self.bg,
+                **decorate_kwargs
+            )
+
+    def _parse_desktop(self, d, m):
+        d_name = d[1:]
+        decorate_kwargs = {
+            "text": d_name, "padding": self.padding,
+            "actions": self._actions_desktop(d_name, m)
+        }
+
+        if d.startswith("O"):
+            return self.decorate(
+                fg=self.fg_focused_occupied or self.fg,
+                bg=self.bg_focused_occupied or self.bg,
+                **decorate_kwargs
+            )
+        elif d.startswith("o"):
+            return self.decorate(
+                fg=self.fg_occupied or self.fg,
+                bg=self.bg_occupied or self.bg,
+                **decorate_kwargs
+            )
+        elif d.startswith("F"):
+            return self.decorate(
+                fg=self.fg_focused_free or self.fg,
+                bg=self.bg_focused_free or self.bg,
+                **decorate_kwargs
+            )
+        elif d.startswith("f"):
+            return self.decorate(
+                fg=self.fg_free or self.fg,
+                bg=self.bg_free or self.bg,
+                **decorate_kwargs
+            )
+        elif d.startswith("U"):
+            return self.decorate(
+                fg=self.fg_focused_urgent or self.fg,
+                bg=self.bg_focused_urgent or self.bg,
+                **decorate_kwargs
+            )
+        elif d.startswith("u"):
+            return self.decorate(
+                fg=self.fg_urgent or self.fg,
+                bg=self.bg_urgent or self.bg,
+                **decorate_kwargs
+            )
+
+    def _get_focused_desktop(self, desktops):
+        """
+        Return the focused desktop in a list of desktops
+        """
+        starts_with_uppercase = re.compile(r"^[A-Z]")
+        for d in desktops:
+            if re.match(starts_with_uppercase, d):
+                yield d[1:]
 
     def _parse_and_decorate(self, infos):
         for m, prop in infos.items():
+            self._focused[m] = next(
+                self._get_focused_desktop(prop["desktops"])
+            )
             if len(list(infos.keys())) > 1:
-                decorate_kwargs = {
-                    "text": m, "padding": self.padding,
-                    "actions": self._actions_monitor(m)
-                }
-                if prop["focused"]:
-                    yield self.decorate(
-                        fg=self.fg_focused_monitor or self.fg,
-                        bg=self.bg_focused_monitor or self.bg,
-                        **decorate_kwargs
-                    )
-                else:
-                    yield self.decorate(
-                        fg=self.fg_monitor or self.fg,
-                        bg=self.bg_monitor or self.bg,
-                        **decorate_kwargs
-                    )
+                yield self._parse_monitor(m, prop)
             for d in prop["desktops"]:
-                d_name = d[1:]
-                decorate_kwargs = {
-                    "text": d_name, "padding": self.padding,
-                    "actions": self._actions_desktop(d_name)
-                }
-
-                if d.startswith("O"):
-                    yield self.decorate(
-                        fg=self.fg_focused_occupied or self.fg,
-                        bg=self.bg_focused_occupied or self.bg,
-                        **decorate_kwargs
-                    )
-                elif d.startswith("o"):
-                    yield self.decorate(
-                        fg=self.fg_occupied or self.fg,
-                        bg=self.bg_occupied or self.bg,
-                        **decorate_kwargs
-                    )
-                elif d.startswith("F"):
-                    yield self.decorate(
-                        fg=self.fg_focused_free or self.fg,
-                        bg=self.bg_focused_free or self.bg,
-                        **decorate_kwargs
-                    )
-                elif d.startswith("f"):
-                    yield self.decorate(
-                        fg=self.fg_free or self.fg,
-                        bg=self.bg_free or self.bg,
-                        **decorate_kwargs
-                    )
-                elif d.startswith("U"):
-                    yield self.decorate(
-                        fg=self.fg_focused_urgent or self.fg,
-                        bg=self.bg_focused_urgent or self.bg,
-                        **decorate_kwargs
-                    )
-                elif d.startswith("u"):
-                    yield self.decorate(
-                        fg=self.fg_urgent or self.fg,
-                        bg=self.bg_urgent or self.bg,
-                        **decorate_kwargs
-                    )
+                yield self._parse_desktop(d, m)
 
     def organize_result(self, monitors, *args, **kwargs):
         """
@@ -102,6 +124,7 @@ class BspwmDesktopWidget(Widget):
                  fg_free=None, bg_free=None,
                  fg_urgent=None, bg_urgent=None,
                  fg_monitor=None, bg_monitor=None,
+                 fg_current_monitor=None, bg_current_monitor=None,
                  fg_focused_occupied=None, bg_focused_occupied=None,
                  fg_focused_free=None, bg_focused_free=None,
                  fg_focused_urgent=None, bg_focused_urgent=None,
@@ -127,7 +150,12 @@ class BspwmDesktopWidget(Widget):
         #: background monitor
         self.bg_monitor = bg_monitor
         #: foreground monitor
-        self.fg_monitor = fg_urgent
+        self.fg_monitor = fg_monitor
+
+        #: background of the current monitor (the monitor where this widget is)
+        self.bg_current_monitor = bg_current_monitor
+        #: foreground of the current monitor (the monitor where this widget is)
+        self.fg_current_monitor = fg_current_monitor
 
         #: background focused occupied desktop
         self.bg_focused_occupied = bg_focused_occupied
@@ -147,7 +175,46 @@ class BspwmDesktopWidget(Widget):
         #: background focused monitor
         self.bg_focused_monitor = bg_focused_monitor
         #: foreground monitor
-        self.fg_focused_monitor = fg_focused_urgent
+        self.fg_focused_monitor = fg_focused_monitor
+
+        self._focused = dict()
 
         # Update the widget when PA volume changes
         self.hooks.subscribe(self.handler, BspwmHook)
+
+
+class BspwmDesktopPoolWidget(BspwmDesktopWidget):
+    """
+    Show desktops as a pool, for bspwm
+
+    Doesn't show monitors, and targets setups where all monitors share a same
+    pool of desktops. An order can be indicated, so the widget will be able to
+    always show desktops in the same order (and will not fully respect the
+    order returned by bspwm).
+    """
+    def _swap_desktop(self, target_d, target_m):
+        """
+        Swap desktop d of monitor m with the one on the current screen
+        """
+        current_m = next(iter(self.screens)).bspwm_monitor_name
+        current_d = self._focused[current_m]
+        return {1: "bspc desktop \"{}\" -s \"{}\"".format(target_d, current_d)}
+
+    def _actions_desktop(self, target_d, target_m):
+        # If attached to only one screen, swap the desktop of the current
+        # screen with the one sent in parameter
+        if len(self.screens) == 1:
+            current_m = next(iter(self.screens)).bspwm_monitor_name
+            if current_m != target_m and current_m in self._focused:
+                return self._swap_desktop(target_d, target_m)
+        # If attached to multiple screens, cannot know on which monitor the
+        # widget is shown.
+        return super()._actions_desktop(target_d, target_m)
+
+    def _parse_and_decorate(self, infos):
+        for m, prop in infos.items():
+            self._focused[m] = next(
+                self._get_focused_desktop(prop["desktops"])
+            )
+            for d in prop["desktops"]:
+                yield self._parse_desktop(d, m)

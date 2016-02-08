@@ -43,6 +43,8 @@ def get_randr_screens():
 
 
 class Screen(_BarSpawner):
+    _bspwm_monitor_name = None
+
     @property
     def geometry(self):
         """
@@ -64,6 +66,15 @@ class Screen(_BarSpawner):
     @geometry.setter
     def geometry(self, value):
         self._geometry = value
+
+    @property
+    def bspwm_monitor_name(self):
+        return (self.name if self._bspwm_monitor_name is None
+                else self._bspwm_monitor_name)
+
+    @bspwm_monitor_name.setter
+    def bspwm_monitor_name(self, value):
+        self._bspwm_monitor_name = value
 
     def add_widget(self, alignment, *widgets, index=None):
         """
@@ -164,7 +175,7 @@ class Screen(_BarSpawner):
         return attr
 
     def __init__(self, name=None, refresh=-1, clickable=-1, geometry=None,
-                 panel=None, *args, **kwargs):
+                 panel=None, bspwm_monitor_name=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         #: screen name
@@ -183,3 +194,6 @@ class Screen(_BarSpawner):
 
         #: widgets to show on this screen
         self._widgets = OrderedDict([("l", []), ("c", []), ("r", [])])
+
+        #: only useful with bspwm. Used by Bspwm*DesktopWidget
+        self.bspwm_monitor_name = bspwm_monitor_name
