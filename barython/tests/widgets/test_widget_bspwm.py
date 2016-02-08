@@ -5,7 +5,8 @@ import pytest
 from barython.widgets.bspwm import BspwmDesktopWidget
 
 
-def test_bspwm_desktop_widget_organize_result():
+@pytest.fixture
+def basic_bspwm_desktop_widget():
     bspwm = BspwmDesktopWidget(
         fg_occupied="#FF000000", bg_occupied="#FFFFFF00",
         fg_free="#FF000001", bg_free="#FFFFFF01",
@@ -17,7 +18,38 @@ def test_bspwm_desktop_widget_organize_result():
         fg_focused_monitor="#FF000007", bg_focused_monitor="#FFFFFF07",
         padding=1, refresh=0
     )
+    return bspwm
 
+
+def test_bspwm_desktop_widget_parse_desktop(basic_bspwm_desktop_widget):
+    """
+    Test with occupied desktop
+    """
+    bspwm = basic_bspwm_desktop_widget
+    template_result = (
+        "%{{A1:bspc desktop -f q:}}"
+        "%{{B{}}}%{{F{}}} %{{F-}}%{{B-}}"
+        "%{{B{}}}%{{F{}}}q%{{F-}}%{{B-}}"
+        "%{{B{}}}%{{F{}}} %{{F-}}%{{B-}}"
+        "%{{A}}"
+    )
+
+    assoc_colors_prefix = {
+        "O": (bspwm.bg_focused_occupied, bspwm.fg_focused_occupied),
+        "o": (bspwm.bg_occupied, bspwm.fg_occupied),
+        "F": (bspwm.bg_focused_free, bspwm.fg_focused_free),
+        "f": (bspwm.bg_free, bspwm.fg_free),
+        "U": (bspwm.bg_focused_urgent, bspwm.fg_focused_urgent),
+        "u": (bspwm.bg_urgent, bspwm.fg_urgent),
+    }
+
+    for p, (fg, bg) in assoc_colors_prefix.items():
+        expected = template_result.format(*((fg, bg) * 3))
+        assert expected == "".join(bspwm._parse_desktop(p + "q", "_"))
+
+
+def test_bspwm_desktop_widget_organize_result(basic_bspwm_desktop_widget):
+    bspwm = basic_bspwm_desktop_widget
     monitors = OrderedDict([
         ('HDMI-0',
             {'desktops': ['Of'], 'layout': 'T', 'focused': True}),

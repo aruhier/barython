@@ -15,6 +15,16 @@ class BspwmDesktopWidget(Widget):
     """
     Show monitors and desktops, for bspwm
     """
+    #: Associates desktops prefix and colors to define
+    _desktop_colors_prefix = {
+        "O": ("bg_focused_occupied", "fg_focused_occupied"),
+        "o": ("bg_occupied", "fg_occupied"),
+        "F": ("bg_focused_free", "fg_focused_free"),
+        "f": ("bg_free", "fg_free"),
+        "U": ("bg_focused_urgent", "fg_focused_urgent"),
+        "u": ("bg_urgent", "fg_urgent"),
+    }
+
     @protect_handler
     def handler(self, monitors, *args, **kwargs):
         """
@@ -39,17 +49,12 @@ class BspwmDesktopWidget(Widget):
             "actions": self._actions_monitor(m, prop)
         }
         if prop["focused"]:
-            return self.decorate(
-                fg=self.fg_focused_monitor or self.fg,
-                bg=self.bg_focused_monitor or self.bg,
-                **decorate_kwargs
-            )
+            fg = self.fg_focused_monitor or self.fg
+            bg = self.bg_focused_monitor or self.bg
         else:
-            return self.decorate(
-                fg=self.fg_monitor or self.fg,
-                bg=self.bg_monitor or self.bg,
-                **decorate_kwargs
-            )
+            fg = self.fg_monitor or self.fg
+            bg = self.bg_monitor or self.bg
+        return self.decorate(fg=fg, bg=bg, **decorate_kwargs)
 
     def _parse_desktop(self, d, m):
         d_name = d[1:]
@@ -58,42 +63,14 @@ class BspwmDesktopWidget(Widget):
             "actions": self._actions_desktop(d_name, m)
         }
 
-        if d.startswith("O"):
-            return self.decorate(
-                fg=self.fg_focused_occupied or self.fg,
-                bg=self.bg_focused_occupied or self.bg,
-                **decorate_kwargs
-            )
-        elif d.startswith("o"):
-            return self.decorate(
-                fg=self.fg_occupied or self.fg,
-                bg=self.bg_occupied or self.bg,
-                **decorate_kwargs
-            )
-        elif d.startswith("F"):
-            return self.decorate(
-                fg=self.fg_focused_free or self.fg,
-                bg=self.bg_focused_free or self.bg,
-                **decorate_kwargs
-            )
-        elif d.startswith("f"):
-            return self.decorate(
-                fg=self.fg_free or self.fg,
-                bg=self.bg_free or self.bg,
-                **decorate_kwargs
-            )
-        elif d.startswith("U"):
-            return self.decorate(
-                fg=self.fg_focused_urgent or self.fg,
-                bg=self.bg_focused_urgent or self.bg,
-                **decorate_kwargs
-            )
-        elif d.startswith("u"):
-            return self.decorate(
-                fg=self.fg_urgent or self.fg,
-                bg=self.bg_urgent or self.bg,
-                **decorate_kwargs
-            )
+        bg, fg = self._desktop_colors_prefix.get(
+            d[0], ("bg", "fg")
+        )
+        return self.decorate(
+            fg=getattr(self, fg, None) or self.fg,
+            bg=getattr(self, bg, None) or self.bg,
+            **decorate_kwargs
+        )
 
     def _get_focused_desktop(self, desktops):
         """
@@ -177,6 +154,7 @@ class BspwmDesktopWidget(Widget):
         #: foreground monitor
         self.fg_focused_monitor = fg_focused_monitor
 
+        #: registered the focused desktop of each monitors
         self._focused = dict()
 
         # Update the widget when PA volume changes
