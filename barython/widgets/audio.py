@@ -12,6 +12,11 @@ logger = logging.getLogger("barython")
 
 
 class PulseAudioWidget(SubprocessWidget):
+    """
+    Show the current volume
+
+    Requires pamixer to work
+    """
     _icon = None
     _volume = 0
     _input_mute = False
@@ -50,10 +55,10 @@ class PulseAudioWidget(SubprocessWidget):
         """
         Override this method to change the infos to print
         """
-        volume, output_mute, input_mute = output.split()
+        print("ouput", output)
+        volume, output_mute = output.split()
         self._volume = int(volume)
-        self._output_mute = output_mute == "yes"
-        self._input_mute = input_mute == "yes"
+        self._output_mute = output_mute == "true"
         if self.icon:
             return (
                 "{} {}".format(self.icon, self._volume)
@@ -62,7 +67,9 @@ class PulseAudioWidget(SubprocessWidget):
         else:
             return "{}".format(self._volume)
 
-    def __init__(self, cmd=["pulseaudio-ctl", "full-status"],
+    def __init__(self,
+                 cmd=["bash", "-c",
+                      "echo `pamixer --get-volume` `pamixer --get-mute`"],
                  *args, **kwargs):
         super().__init__(*args, **kwargs, cmd=cmd, infinite=False)
 
