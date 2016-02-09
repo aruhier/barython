@@ -55,7 +55,6 @@ class PulseAudioWidget(SubprocessWidget):
         """
         Override this method to change the infos to print
         """
-        print("ouput", output)
         volume, output_mute = output.split()
         self._volume = int(volume)
         self._output_mute = output_mute == "true"
@@ -68,10 +67,9 @@ class PulseAudioWidget(SubprocessWidget):
             return "{}".format(self._volume)
 
     def __init__(self,
-                 cmd=["bash", "-c",
-                      "echo `pamixer --get-volume` `pamixer --get-mute`"],
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs, cmd=cmd, infinite=False)
+                 cmd=["echo $(pamixer --get-volume) $(pamixer --get-mute)"],
+                 shell=True, *args, **kwargs):
+        super().__init__(*args, **kwargs, cmd=cmd, infinite=False, shell=shell)
 
         # Update the widget when PA volume changes
         self.hooks.subscribe(self.handler, PulseAudioHook)
