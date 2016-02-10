@@ -70,6 +70,14 @@ def test_bspwm_desktop_widget_parse_desktop(basic_bspwm_desktop_widget):
         assert expected == "".join(bspwm._parse_desktop(p + "q", "_"))
 
 
+def test_bspwm_desktop_widget_sort_fixed_order(basic_bspwm_desktop_widget):
+    bspwm = basic_bspwm_desktop_widget
+    desktops = ["us", "fqsd", "Oq", "ff"]
+    fixed_order = ("q", "s", "qsd", "ff")
+    bspwm.fixed_order = fixed_order
+    assert bspwm._sort_fixed_order(desktops) == ["Oq", "us", "fqsd", "ff"]
+
+
 def test_bspwm_desktop_widget_organize_result(basic_bspwm_desktop_widget):
     bspwm = basic_bspwm_desktop_widget
     monitors = OrderedDict([

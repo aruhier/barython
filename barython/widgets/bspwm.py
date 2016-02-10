@@ -43,6 +43,23 @@ class BspwmDesktopWidget(Widget):
     def _actions_monitor(self, monitor, *args, **kwargs):
         return {1: "bspc monitor -f \"{}\"".format(monitor)}
 
+    def _sort_fixed_order(self, desktops_to_sort):
+        """
+        Return a copy of desktops but sorted in a fix order
+
+        Useful if you swap your desktops and do not want the order to change.
+        Uses the fixed_order attribute to sort desktops_to_sort.
+
+        :param desktops_to_sort: list of desktops to reorder
+        """
+        d = desktops_to_sort.copy()
+        # All desktops that are not in self._fixed_order will be put at the
+        # end
+        max_index = len(self.fixed_order)
+        d.sort(key=lambda x: self.fixed_order.index(x[1:])
+               if x[1:] in self.fixed_order else max_index)
+        return d
+
     def _parse_monitor(self, m, prop):
         decorate_kwargs = {
             "text": m, "padding": self.padding,
@@ -88,7 +105,9 @@ class BspwmDesktopWidget(Widget):
             )
             if len(list(infos.keys())) > 1:
                 yield self._parse_monitor(m, prop)
-            for d in prop["desktops"]:
+            desktop_list = (self._sort_fixed_order(prop["desktops"])
+                            if self.fixed_order else prop["desktops"])
+            for d in desktop_list:
                 yield self._parse_desktop(d, m)
 
     def organize_result(self, monitors, *args, **kwargs):
@@ -106,6 +125,7 @@ class BspwmDesktopWidget(Widget):
                  fg_focused_free=None, bg_focused_free=None,
                  fg_focused_urgent=None, bg_focused_urgent=None,
                  fg_focused_monitor=None, bg_focused_monitor=None,
+                 fixed_order=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs, infinite=False)
 
@@ -154,6 +174,11 @@ class BspwmDesktopWidget(Widget):
         #: foreground monitor
         self.fg_focused_monitor = fg_focused_monitor
 
+        #: fix order of desktop. Desktops will not be respect the bspwm order
+        #  anymore, but the one specified here. All desktop that do not match
+        #  will be put at the end, in respecting (this time) the bspwm order.
+        self.fixed_order = fixed_order or []
+
         #: registered the focused desktop of each monitors
         self._focused = dict()
 
@@ -189,10 +214,29 @@ class BspwmDesktopPoolWidget(BspwmDesktopWidget):
         # widget is shown.
         return super()._actions_desktop(target_d, target_m)
 
+    def _sort_fixed_order(self, desktops_to_sort):
+        """
+        :param desktops_to_sort: here, is a list of tuple, [(d, m), ], with d
+                                 the desktop, and m its monitor
+        """
+        d = desktops_to_sort.copy()
+        # All desktops that are not in self._fixed_order will be put at the
+        # end
+        max_index = len(self.fixed_order)
+        d.sort(key=lambda x: self.fixed_order.index(x[0][1:])
+               if x[0][1:] in self.fixed_order else max_index)
+        return d
+
     def _parse_and_decorate(self, infos):
-        for m, prop in infos.items():
-            self._focused[m] = next(
-                self._get_focused_desktop(prop["desktops"])
-            )
-            for d in prop["desktops"]:
-                yield self._parse_desktop(d, m)
+        def get_desktops():
+            for m, prop in infos.items():
+                self._focused[m] = next(
+                    self._get_focused_desktop(prop["desktops"])
+                )
+                for d in prop["desktops"]:
+                    yield d, m
+
+        desktop_list = (self._sort_fixed_order(list(get_desktops()))
+                        if self.fixed_order else get_desktops())
+        for d, m in desktop_list:
+            yield self._parse_desktop(d, m)
