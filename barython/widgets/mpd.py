@@ -14,6 +14,21 @@ class MPDWidget(ThreadedWidget):
     """
     Requires python-mpd2
     """
+    _icon = None
+
+    @property
+    def icon(self):
+        status = self.status
+        no_icon = self._icon is None or not status
+        if isinstance(self._icon, str) or no_icon:
+            return self._icon
+        global_icon = self._icon.get("global", None)
+        return self._icon.get(status, global_icon)
+
+    @icon.setter
+    def icon(self, value):
+        self._icon = value
+
     @property
     def status(self):
         try:
@@ -49,7 +64,7 @@ class MPDWidget(ThreadedWidget):
         if icon:
             return (
                 "{} {} - {}".format(icon, artist, title)
-                if not current else "{}".format(icon)
+                if current else "{}".format(icon)
             )
         else:
             return "{} - {}".format(artist, title)
