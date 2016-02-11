@@ -18,7 +18,7 @@ class MPDWidget(ThreadedWidget):
     def status(self):
         try:
             r = self._mpdclient.status()["state"]
-        except (mpd.ConnectionError, BrokenPipeError):
+        except Exception:
             self._mpdclient.connect(self.host, self.port)
             r = self._mpdclient.status()["state"]
         return r
@@ -27,7 +27,7 @@ class MPDWidget(ThreadedWidget):
     def current(self):
         try:
             r = self._mpdclient.currentsong()
-        except (mpd.ConnectionError, BrokenPipeError):
+        except Exception:
             self._mpdclient.connect(self.host, self.port)
             r = self._mpdclient.currentsong()
         return r
