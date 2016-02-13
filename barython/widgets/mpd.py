@@ -34,7 +34,7 @@ class MPDWidget(ThreadedWidget):
         try:
             r = self._mpdclient.status()["state"]
         except Exception:
-            self._mpdclient.connect(self.host, self.port)
+            self._reconnect()
             r = self._mpdclient.status()["state"]
         return r
 
@@ -43,9 +43,19 @@ class MPDWidget(ThreadedWidget):
         try:
             r = self._mpdclient.currentsong()
         except Exception:
-            self._mpdclient.connect(self.host, self.port)
+            self._reconnect()
             r = self._mpdclient.currentsong()
         return r
+
+    def _reconnect(self):
+        try:
+            self._mpdclient.connect(self.host, self.port)
+        except:
+            try:
+                self._mpdclient.disconnect()
+            except mpd.ConnectionError:
+                pass
+            self._mpdclient.connect(self.host, self.port)
 
     def password(self, value):
         self._mpdclient.password(value)
