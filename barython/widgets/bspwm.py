@@ -214,6 +214,14 @@ class BspwmDesktopPoolWidget(BspwmDesktopWidget):
         # widget is shown.
         return super()._actions_desktop(target_d, target_m)
 
+    def _parse_desktop(self, d, m):
+        if len(self.screens) == 1:
+            current_m = next(iter(self.screens)).bspwm_monitor_name
+            # If the desktop is focused on an other screen, ignore the focus.
+            if current_m != m:
+                d = d[0].lower() + d[1:]
+        return super()._parse_desktop(d, m)
+
     def _sort_fixed_order(self, desktops_to_sort):
         """
         :param desktops_to_sort: here, is a list of tuple, [(d, m), ], with d
