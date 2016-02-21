@@ -39,6 +39,8 @@ class _BarSpawner():
                     self.stop_bar(kill=True)
                 self.init_bar()
                 self._write_in_bar(content)
+        else:
+            logger.debug("Screen is stopped, will not draw anything")
 
     def gather(self):
         """

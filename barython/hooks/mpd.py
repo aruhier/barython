@@ -2,6 +2,7 @@
 
 import logging
 import mpd
+import select
 import time
 
 from . import _Hook
@@ -29,6 +30,7 @@ class MPDHook(_Hook):
                     # test the connection and notify to force printing the
                     # current song, as idle() will wait for any change in mpd
                     self._mpdclient.ping()
+                    self._mpdclient.send_idle()
                     try:
                         self.notify(**self.parse_event(run=True))
                     except Exception as e:
@@ -36,13 +38,20 @@ class MPDHook(_Hook):
                     killed = False
                 else:
                     # wait for any change in mpd and then notify
+                    changes = select.select(
+                        [self._mpdclient], [], [], self.refresh
+                    )
+                    if not changes[0]:
+                        continue
+                    self._mpdclient.noidle()
                     notify_kwargs = self.parse_event(
-                        self._mpdclient.idle()
+                        self._mpdclient.fetch_idle()
                     )
                     try:
                         self.notify(**notify_kwargs)
                     except Exception as e:
                         logger.error(e)
+                    self._mpdclient.send_idle()
             except:
                 killed = True
                 try:
@@ -70,11 +79,9 @@ class MPDHook(_Hook):
 
     def stop(self):
         super().stop()
-        try:
-            self._mpdclient.close()
-            self._mpdclient.disconnect()
-        except:
-            pass
+        self._mpdclient.noidle()
+        self._mpdclient.close()
+        self._mpdclient.disconnect()
 
     def __init__(self, host="localhost", port=6600, password=None, refresh=1,
                  *args, **kwargs):

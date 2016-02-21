@@ -69,8 +69,8 @@ class Panel(_BarSpawner):
     def start(self):
         logging.debug("Starts the panel")
         try:
-            signal.signal(signal.SIGINT, self.stop)
-            signal.signal(signal.SIGTERM, self.stop)
+            for s in (signal.SIGINT, signal.SIGTERM):
+                signal.signal(s, self.stop)
         except ValueError:
             pass
 
@@ -89,16 +89,16 @@ class Panel(_BarSpawner):
 
     def stop(self, *args, **kwargs):
         super().stop(*args, **kwargs)
-        for screen in self.screens:
-            try:
-                screen.stop()
-            except:
-                continue
         if self.hooks.listen:
             try:
                 self.hooks.stop()
             except:
                 pass
+        for screen in self.screens:
+            try:
+                screen.stop()
+            except:
+                continue
 
     def __init__(self, instance_per_screen=True, geometry=None, refresh=0.1,
                  screens=None, keep_unplugged_screens=False, *args, **kwargs):
