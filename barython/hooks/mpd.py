@@ -43,7 +43,6 @@ class MPDHook(_Hook):
                     )
                     if not changes[0]:
                         continue
-                    self._mpdclient.noidle()
                     notify_kwargs = self.parse_event(
                         self._mpdclient.fetch_idle()
                     )
