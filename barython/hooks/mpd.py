@@ -78,8 +78,8 @@ class MPDHook(_Hook):
 
     def stop(self):
         super().stop()
-        self._mpdclient.noidle()
         self._mpdclient.close()
+        self._mpdclient.noidle()
         self._mpdclient.disconnect()
 
     def __init__(self, host="localhost", port=6600, password=None, refresh=1,
