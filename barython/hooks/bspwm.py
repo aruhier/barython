@@ -38,5 +38,6 @@ class BspwmHook(SubprocessHook):
         return {"monitors": monitors}
 
     def __init__(self, cmd=["bspc", "control", "--subscribe"],
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs, cmd=cmd)
+                 failure_refresh=1, *args, **kwargs):
+        super().__init__(*args, **kwargs, cmd=cmd,
+                         failure_refresh=failure_refresh)

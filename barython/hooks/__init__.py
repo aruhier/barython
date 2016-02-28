@@ -6,6 +6,7 @@ import logging
 import shlex
 import subprocess
 import threading
+import time
 
 
 logger = logging.getLogger("barython")
@@ -25,6 +26,8 @@ class _Hook(threading.Thread):
             except Exception as e:
                 logger.debug("Error in hook: {}".format(e))
                 continue
+        if self.refresh:
+            time.sleep(self.refresh)
 
     def start(self, *args, **kwargs):
         self._stop_event.clear()
@@ -41,7 +44,8 @@ class _Hook(threading.Thread):
         new_h.callbacks = self.callbacks.copy()
         return new_h
 
-    def __init__(self, callbacks=None, *args, **kwargs):
+    def __init__(self, callbacks=None, refresh=0, failure_refresh=0,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.daemon = False
 
@@ -49,6 +53,11 @@ class _Hook(threading.Thread):
         self.callbacks = set()
         if callbacks is not None:
             self.callbacks.update(callbacks)
+
+        #: "protect" hook by providing the ability to wait between 2 notifies
+        self.refresh = refresh
+        #: time to wait between 2 failures
+        self.failure_refresh = failure_refresh
 
         #: event to stop the screen. _stop_event because _stop interfers with
         #  the Thread attribute
@@ -85,6 +94,9 @@ class SubprocessHook(_Hook):
                     line.decode().replace('\n', '').replace('\r', '')
                 )
                 self.notify(**notify_kwargs)
+                subproc_poll = self._subproc.poll()
+                if subproc_poll is not None and subproc_poll != 0:
+                    time.sleep(self.failure_refresh)
             except Exception as e:
                 logger.error("Error when reading line: {}".format(e))
                 try:
