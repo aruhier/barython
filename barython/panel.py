@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 import signal
 import threading
 
@@ -68,11 +69,8 @@ class Panel(_BarSpawner):
 
     def start(self):
         logging.debug("Starts the panel")
-        try:
-            for s in (signal.SIGINT, signal.SIGTERM):
-                signal.signal(s, self.stop)
-        except ValueError:
-            pass
+        for s in (signal.SIGINT, signal.SIGTERM, signal.SIGQUIT):
+            signal.signal(s, self._handler_signal)
 
         super().start()
 
@@ -99,6 +97,10 @@ class Panel(_BarSpawner):
                 screen.stop()
             except:
                 continue
+
+    def _handler_signal(self, *args, **kwargs):
+        self.stop()
+        os.sys.exit(0)
 
     def __init__(self, instance_per_screen=True, geometry=None, refresh=0.1,
                  screens=None, keep_unplugged_screens=False, *args, **kwargs):
