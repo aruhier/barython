@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+import time
 
 
 logging.getLogger("barython")
@@ -47,3 +48,31 @@ def lemonbar(bar_cmd="lemonbar", geometry=None, fonts=None, fg=None, bg=None,
     except AttributeError:
         pass
     return bar
+
+
+def splitted_sleep(time_sleep, interval=0.5, stop=None,
+                   stop_args=[], stop_kwargs={}):
+    """
+    Launch many time.sleep() with little values to often check the
+    condition sent
+
+    In order to regularely check a condition and stop the sleep if needed,
+    it will wait the wanted value with many time.sleep()
+
+    .. warning:: If stop() takes a long time, the function will sleep more
+                 time that what you actually want!
+
+    :param time_sleep: time to sleep in total
+    :param interval: interval between each time.sleep(), in seconds.
+                     Default to 0.5 seconds.
+    :param stop: function called between each interval. If returning True,
+                 stop to sleep and exit, otherwise, continue.
+    :param stop_args: args for stop()
+    :param stop_kwargs: kwargs for stop()
+    """
+    for i in range(int(time_sleep/interval)):
+        time.sleep(interval)
+        if stop is not None and stop(*stop_args, **stop_kwargs):
+            return
+    if time_sleep % interval:
+        time.sleep(time_sleep % interval)

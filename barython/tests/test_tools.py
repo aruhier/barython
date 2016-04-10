@@ -1,7 +1,9 @@
 
-from barython.tools import lemonbar
 import logging
 import subprocess
+
+import barython.tools
+from barython.tools import lemonbar, splitted_sleep
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -27,3 +29,9 @@ def test_lemonbar(monkeypatch):
     ]
 
     assert launched_cmd == expected_cmd
+
+
+def test_splitted_sleep(mocker):
+    mocker.spy(barython.tools.time, "sleep")
+    splitted_sleep(0.2, 0.05)
+    assert barython.tools.time.sleep.call_count == 4
