@@ -9,6 +9,7 @@ import threading
 import time
 
 from barython.hooks import HooksPool
+from barython.tools import splitted_sleep
 
 logger = logging.getLogger("barython")
 
@@ -98,6 +99,10 @@ class Widget():
 
         return self.decorate(text, **d_kwargs)
 
+    def trigger_global_update(self, output=None, *args, **kwargs):
+        new_content = self.decorate_with_self_attributes(output)
+        self._update_screens(new_content)
+
     @protect_handler
     def handler(self, *args, **kwargs):
         """
@@ -127,7 +132,12 @@ class Widget():
                 threading.Thread(target=screen.update).start()
 
     def continuous_update(self):
-        pass
+        while not self._stop.is_set():
+            try:
+                self.update()
+            except Exception as e:
+                logger.error(e)
+            splitted_sleep(self.refresh, stop=self._stop.is_set)
 
     def update(self):
         pass
@@ -141,10 +151,17 @@ class Widget():
                 s.hooks.merge(self)
 
     def start(self, *args, **kwargs):
-        pass
+        self._stop.clear()
+        if not self._lock_start.acquire(blocking=False):
+            return
+        if self.infinite:
+            self.continuous_update()
+        else:
+            self.update()
+        self._lock_start.release()
 
-    def stop(self, *args, **kwargs):
-        pass
+    def stop(self):
+        self._stop.set()
 
     def __init__(self, bg=None, fg=None, padding=0, fonts=None, icon="",
                  actions=None, refresh=-1, screens=None, infinite=False):
@@ -179,6 +196,8 @@ class Widget():
         #: run in an infinite loop or not
         self.infinite = infinite
 
+        #: event to stop the widget
+        self._stop = threading.Event()
         self._lock_start = threading.Condition()
         self._lock_update = threading.Condition()
         self._refresh_lock = threading.Semaphore(2)
@@ -204,39 +223,7 @@ class TextWidget(Widget):
         self.infinite = False
 
 
-class ThreadedWidget(Widget):
-    def trigger_global_update(self, output=None, *args, **kwargs):
-        new_content = self.decorate_with_self_attributes(output)
-        self._update_screens(new_content)
-
-    def continuous_update(self, *args, **kwargs):
-        while True and not self._stop.is_set():
-            self.update()
-            time.sleep(self.refresh)
-
-    def update(self, *args, **kwargs):
-        pass
-
-    def start(self):
-        self._stop.clear()
-        if not self._lock_start.acquire(blocking=False):
-            return
-        if self.infinite:
-            self.continuous_update()
-        else:
-            return self.update()
-        self._lock_start.release()
-
-    def stop(self):
-        self._stop.set()
-
-    def __init__(self, infinite=True, *args, **kwargs):
-        super().__init__(*args, **kwargs, infinite=infinite)
-        #: event to stop the widget
-        self._stop = threading.Event()
-
-
-class SubprocessWidget(ThreadedWidget):
+class SubprocessWidget(Widget):
     """
     Run a subprocess in a loop
     """

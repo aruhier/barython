@@ -3,14 +3,14 @@
 import logging
 import mpd
 
-from .base import ThreadedWidget
+from .base import Widget
 from barython.hooks.mpd import MPDHook
 
 
 logger = logging.getLogger("barython")
 
 
-class MPDWidget(ThreadedWidget):
+class MPDWidget(Widget):
     """
     Requires python-mpd2
     """
