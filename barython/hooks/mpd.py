@@ -3,9 +3,9 @@
 import logging
 import mpd
 import select
-import time
 
 from . import _Hook
+from barython.tools import splitted_sleep
 
 logger = logging.getLogger("barython")
 
@@ -68,7 +68,7 @@ class MPDHook(_Hook):
                     except:
                         pass
                 finally:
-                    time.sleep(self.refresh)
+                    splitted_sleep(self.refresh, stop=self._stop_event.is_set)
 
     def is_compatible(self, hook):
         return (

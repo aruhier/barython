@@ -6,7 +6,6 @@ import os
 import shlex
 import subprocess
 import threading
-import time
 
 from barython.hooks import HooksPool
 from barython.tools import splitted_sleep
@@ -110,7 +109,7 @@ class Widget():
         """
         with self._lock_update:
             self.update()
-            time.sleep(self.refresh)
+            splitted_sleep(self.refresh, stop=self._stop.is_set)
 
     def organize_result(self, *args, **kwargs):
         """
@@ -289,7 +288,7 @@ class SubprocessWidget(Widget):
                 except:
                     pass
             finally:
-                time.sleep(self.refresh)
+                splitted_sleep(self.refresh, stop=self._stop.is_set)
                 self.notify()
         try:
             self._subproc.terminate()

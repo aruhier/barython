@@ -6,7 +6,8 @@ import logging
 import shlex
 import subprocess
 import threading
-import time
+
+from barython.tools import splitted_sleep
 
 
 logger = logging.getLogger("barython")
@@ -27,7 +28,7 @@ class _Hook(threading.Thread):
                 logger.debug("Error in hook: {}".format(e))
                 continue
         if self.refresh:
-            time.sleep(self.refresh)
+            splitted_sleep(self.refresh, stop=self._stop_event.is_set)
 
     def start(self, *args, **kwargs):
         self._stop_event.clear()
@@ -96,7 +97,8 @@ class SubprocessHook(_Hook):
                 self.notify(**notify_kwargs)
                 subproc_poll = self._subproc.poll()
                 if subproc_poll is not None and subproc_poll != 0:
-                    time.sleep(self.failure_refresh)
+                    splitted_sleep(self.failure_refresh,
+                                   stop=self._stop_event.is_set)
             except Exception as e:
                 logger.error("Error when reading line: {}".format(e))
                 try:

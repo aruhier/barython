@@ -2,9 +2,9 @@
 
 import logging
 import re
-import time
 
 from .base import Widget, protect_handler
+from barython.tools import splitted_sleep
 from barython.hooks.bspwm import BspwmHook
 
 
@@ -35,7 +35,7 @@ class BspwmDesktopWidget(Widget):
         )
         with self._lock_update:
             self._update_screens(new_content)
-            time.sleep(self.refresh)
+            splitted_sleep(self.refresh, stop=self._stop.is_set)
 
     def _actions_desktop(self, desktop, *args, **kwargs):
         return {1: "bspc desktop -f \"{}\"".format(desktop)}

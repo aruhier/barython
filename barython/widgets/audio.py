@@ -2,9 +2,9 @@
 
 from bisect import bisect_left
 import logging
-import time
 
 from .base import SubprocessWidget, protect_handler
+from barython.tools import splitted_sleep
 from barython.hooks.audio import PulseAudioHook
 
 
@@ -49,7 +49,7 @@ class PulseAudioWidget(SubprocessWidget):
             logger.debug("PA: line \"{}\" catched.".format(event))
             with self._lock_update:
                 self.update()
-                time.sleep(self.refresh)
+                splitted_sleep(self.refresh, self._stop.is_set)
 
     def organize_result(self, output, *args, **kwargs):
         """
