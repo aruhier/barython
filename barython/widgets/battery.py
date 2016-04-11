@@ -23,6 +23,7 @@ BATTERY_INFO_FILES = {
     "energy_full": ["energy_full", "charge_full"],
     "power_now": ["power_now", "current_now"],
     "status": ["status"],
+    "type": ["type"],
 }
 
 
@@ -49,16 +50,16 @@ class BatteryWidget(Widget):
         if show_batt_name:
             r += "{}: ".format(battery)
         r += "{}%".format(max(0, min(infos["capacity"], 100)))
-        remains = min(infos["remains"], 0)
+        remains = max(infos["remains"], 0)
         if remains:
-            r += " - {}".format(remains)
+            r += " - {:d}:{:02d}".format(*divmod(remains, 60))
         return r
 
     def organize_result(self, **batteries):
         r = (" " * self.padding).join(
             self._result_by_battery(
                 battery, infos, show_batt_name=len(batteries) > 1
-            ) for battery, infos in batteries.items()
+            ) for battery, infos in sorted(batteries.items())
         )
         return super().organize_result(r)
 
@@ -68,8 +69,11 @@ class BatteryWidget(Widget):
 
         :return: yield each battery name
         """
-        for component in os.listdir(BAT_DIR):
-            t = _read_1st_and_concat(os.path.join(BAT_DIR, component, "type"))
+        for component in sorted(os.listdir(BAT_DIR)):
+            t = _read_1st_and_concat(*[
+                os.path.join(BAT_DIR, component, type_file)
+                for type_file in BATTERY_INFO_FILES.get("type", [])
+            ])
             if t == BAT_TYPE:
                 yield component
 

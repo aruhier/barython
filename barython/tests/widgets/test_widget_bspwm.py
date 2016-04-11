@@ -2,7 +2,6 @@
 from collections import OrderedDict
 import pytest
 
-from barython.screen import Screen
 from barython.widgets.bspwm import BspwmDesktopWidget, BspwmDesktopPoolWidget
 
 
@@ -171,8 +170,6 @@ def test_bspwm_desktop_pool_widget_actions_desktop_no_screen(
 def test_bspwm_desktop_pool_widget_actions_desktop_different_screen(
         basic_bspwm_desktop_pool_widget):
     bspwm = basic_bspwm_desktop_pool_widget
-    s0 = Screen("HDMI-0")
-    s0.add_widget("l", bspwm)
     # simulate the focus on the desktop d of monitor HDMI-0
     bspwm._focused["HDMI-0"] = "d"
 
@@ -183,8 +180,6 @@ def test_bspwm_desktop_pool_widget_actions_desktop_different_screen(
 def test_bspwm_desktop_pool_widget_actions_desktop_same_screen(
         basic_bspwm_desktop_pool_widget):
     bspwm = basic_bspwm_desktop_pool_widget
-    s0 = Screen("HDMI-0")
-    s0.add_widget("l", bspwm)
     # simulate the focus on the desktop d of monitor HDMI-0
     bspwm._focused["HDMI-0"] = "d"
 
