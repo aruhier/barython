@@ -49,7 +49,7 @@ class PulseAudioWidget(SubprocessWidget):
             logger.debug("PA: line \"{}\" catched.".format(event))
             with self._lock_update:
                 self.update()
-                splitted_sleep(self.refresh, self._stop.is_set)
+                splitted_sleep(self.refresh, stop=self._stop.is_set)
 
     def organize_result(self, output, *args, **kwargs):
         """
