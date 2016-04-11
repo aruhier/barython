@@ -125,7 +125,7 @@ class BspwmDesktopWidget(Widget):
                  fg_focused_free=None, bg_focused_free=None,
                  fg_focused_urgent=None, bg_focused_urgent=None,
                  fg_focused_monitor=None, bg_focused_monitor=None,
-                 fixed_order=None,
+                 fixed_order=None, bspwm_version="0.9.1",
                  *args, **kwargs):
         super().__init__(*args, **kwargs, infinite=False)
 
@@ -179,11 +179,16 @@ class BspwmDesktopWidget(Widget):
         #  will be put at the end, in respecting (this time) the bspwm order.
         self.fixed_order = fixed_order or []
 
+        #: bspwm version
+        self.bspwm_version = bspwm_version
+
         #: registered the focused desktop of each monitors
         self._focused = dict()
 
         # Update the widget when PA volume changes
-        self.hooks.subscribe(self.handler, BspwmHook)
+        self.hooks.subscribe(
+            self.handler, BspwmHook, bspwm_version=self.bspwm_version
+        )
 
 
 class BspwmDesktopPoolWidget(BspwmDesktopWidget):

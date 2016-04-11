@@ -37,7 +37,13 @@ class BspwmHook(SubprocessHook):
                 monitors[last_monitor]["layout"] = i[1:]
         return {"monitors": monitors}
 
-    def __init__(self, cmd=["bspc", "control", "--subscribe"],
-                 failure_refresh=1, *args, **kwargs):
+    def __init__(self, bspwm_version="0.9", cmd=None, failure_refresh=1,
+                 *args, **kwargs):
+        if cmd is None:
+            if bspwm_version == "0.9":
+                cmd = ["bspc", "control", "--subscribe"]
+            elif bspwm_version == "0.9.1":
+                cmd = ["bspc", "subscribe", "report"]
+        self.bspwm_version = bspwm_version
         super().__init__(*args, **kwargs, cmd=cmd,
                          failure_refresh=failure_refresh)
