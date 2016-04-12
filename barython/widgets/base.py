@@ -319,9 +319,9 @@ class SubprocessWidget(Widget):
         except:
             pass
 
-    def __init__(self, cmd, subscribe_cmd=None, shell=False,
+    def __init__(self, cmd, subscribe_cmd=None, shell=False, infinite=True,
                  *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, infinite=infinite)
 
         #: command to run. Can be an iterable or a string
         self.cmd = cmd

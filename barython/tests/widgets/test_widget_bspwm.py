@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import pytest
 
+from barython.screen import Screen
 from barython.widgets.bspwm import BspwmDesktopWidget, BspwmDesktopPoolWidget
 
 
@@ -169,10 +170,15 @@ def test_bspwm_desktop_pool_widget_actions_desktop_no_screen(
 
 def test_bspwm_desktop_pool_widget_actions_desktop_different_screen(
         basic_bspwm_desktop_pool_widget):
+    """
+    Test action for a focused desktop on different screen
+    """
     bspwm = basic_bspwm_desktop_pool_widget
     # simulate the focus on the desktop d of monitor HDMI-0
     bspwm._focused["HDMI-0"] = "d"
 
+    s = Screen("HDMI-0")
+    s.add_widget("l", bspwm)
     expected = {1: "bspc desktop \"q\" -s \"d\""}
     assert expected == bspwm._actions_desktop("q", "HDMI-1")
 
