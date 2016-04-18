@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from decimal import Decimal
 import logging
 import subprocess
 import time
@@ -70,6 +71,7 @@ def splitted_sleep(time_sleep, interval=0.5, stop=None,
     :param stop_args: args for stop()
     :param stop_kwargs: kwargs for stop()
     """
+    time_sleep, interval = Decimal(str(time_sleep)), Decimal(str(interval))
     for i in range(int(time_sleep/interval)):
         time.sleep(interval)
         if stop is not None and stop(*stop_args, **stop_kwargs):
