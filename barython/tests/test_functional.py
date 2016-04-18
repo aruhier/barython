@@ -1,13 +1,19 @@
 
 import pytest
+import barython
 from barython import Panel, Screen
 from barython.screen import get_randr_screens
 from barython.widgets.base import TextWidget, SubprocessWidget
 from barython.widgets import ClockWidget
 
 
+@pytest.fixture
+def disable_sigcatch(monkeypatch):
+    monkeypatch.setattr(barython.panel, "SIG_TO_CATCH", ())
+
+
 @pytest.mark.needs_lemonbar
-def test_empty_bar():
+def test_empty_bar(disable_sigcatch):
     """
     Test an empty bar
     """
@@ -35,7 +41,7 @@ def test_empty_bar():
 
 
 @pytest.mark.needs_lemonbar
-def test_empty_global_bar():
+def test_empty_global_bar(disable_sigcatch):
     """
     Test an empty bar
     """
@@ -55,7 +61,7 @@ def test_empty_global_bar():
 
 
 @pytest.mark.needs_lemonbar
-def test_bar_per_screen():
+def test_bar_per_screen(disable_sigcatch):
     """
     Test an empty bar
     """

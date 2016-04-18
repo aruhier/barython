@@ -10,6 +10,7 @@ from barython import _BarSpawner
 from barython.screen import get_randr_screens
 
 
+SIG_TO_CATCH = (signal.SIGINT, signal.SIGTERM, signal.SIGQUIT)
 logger = logging.getLogger("barython")
 
 
@@ -70,7 +71,7 @@ class Panel(_BarSpawner):
     def start(self):
         logging.debug("Starts the panel")
         try:
-            for s in (signal.SIGINT, signal.SIGTERM, signal.SIGQUIT):
+            for s in SIG_TO_CATCH:
                 signal.signal(s, self._handler_signal)
         except ValueError:
             # Probably launched in a thread, so ignoring it
