@@ -1,7 +1,6 @@
 
 import logging
 import subprocess
-import time
 
 import barython.tools
 from barython.tools import lemonbar, splitted_sleep
@@ -33,7 +32,7 @@ def test_lemonbar(monkeypatch):
 
 
 def test_splitted_sleep(mocker):
-    mocker.spy(barython.tools.time, "sleep")
     mocker.patch("barython.tools.time.sleep")
-    splitted_sleep(1, 0.1)
-    assert barython.tools.time.sleep.call_count == 10
+    mocker.spy(barython.tools.time, "sleep")
+    splitted_sleep(2, 0.5)
+    assert barython.tools.time.sleep.call_count == 4
