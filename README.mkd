@@ -5,7 +5,8 @@ Configures Lemonboys's bar and brings some widgets in trying to stay
 performance friendly. Handles multiple screen and is focused to be BSPWM
 compatible.
 
-The project is not functionnal yet.
+The project is functionnal for a daily use but some important features are not
+implemented yet, and no how-to has been written for now.
 
 Installation
 ------------
