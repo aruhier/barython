@@ -29,7 +29,7 @@ setup(
 
     keywords=["bar", "desktop"],
     packages=["barython", ],
-    # install_requires=["appdirs", "argparse", "bencodepy"],
+    install_requires=["python-mpd2", "xcffib", "xpyb"],
     setup_requires=['pytest-runner', ],
     tests_require=['pytest', 'pytest-cov', "pytest-mock", "pytest-xdist"],
 )
