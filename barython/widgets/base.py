@@ -119,7 +119,7 @@ class Widget():
         Override this method to change the way the info is printed
         """
         result = "{} ".format(self.icon) if self.icon else ""
-        return result + "".join(*args)
+        return result + "".join(*args, *kwargs.values())
 
     def _update_screens(self, new_content):
         """
