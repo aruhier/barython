@@ -4,7 +4,7 @@ import logging
 import xpybutil
 
 from .base import Widget
-from barython.hooks.xorg import XorgHook
+from barython.hooks.xorg import WindowHook
 
 
 logger = logging.getLogger("barython")
@@ -41,4 +41,4 @@ class ActiveWindowWidget(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.infinite = False
-        self.hooks.subscribe(self.handler, XorgHook, refresh=self.refresh)
+        self.hooks.subscribe(self.handler, WindowHook, refresh=self.refresh)

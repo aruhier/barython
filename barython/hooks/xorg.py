@@ -2,7 +2,6 @@
 
 import logging
 import xpybutil
-import xpybutil.window
 
 from . import _Hook
 from barython.tools import splitted_sleep
@@ -10,21 +9,28 @@ from barython.tools import splitted_sleep
 logger = logging.getLogger("xorg_hook")
 
 
-class XorgHook(_Hook):
+class _XorgHook(_Hook):
     """
-    Listen on Xorg events
+    Base for hooks related to xorg
     """
     def parse_event(self, events=None):
         """
         Parse event and return a kwargs meant be used by notify() then
         """
-        return {
-            "events": [(e, xpybutil.util.get_atom_name(e.atom))
-                       for e in events]
-        }
+        return {"events": list(events), }
+
+    def subscribe_to(self, xpybutil):
+        """
+        Subscribe to events
+
+        :param xpybutil: local import of xpybutil
+        """
+        return NotImplementedError()
 
     def run(self):
-        xpybutil.window.listen(xpybutil.root, "PropertyChange")
+        # Import locally to not globalize the subscriptions to the entire file
+        import xpybutil
+        self.subscribe_to(xpybutil)
         while not self._stop_event.is_set():
             try:
                 xpybutil.event.read()
@@ -41,11 +47,23 @@ class XorgHook(_Hook):
     def is_compatible(self, hook):
         return True
 
-    def stop(self):
-        super().stop()
-
     def __init__(self, refresh=0.5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if refresh == -1:
             refresh = 0.5
         self.refresh = refresh
+
+
+class WindowHook(_XorgHook):
+    """
+    Listen on Xorg events related to windows
+    """
+    def parse_event(self, events=None):
+        return {
+            "events": [(e, xpybutil.util.get_atom_name(e.atom))
+                       for e in events]
+        }
+
+    def subscribe_to(self, xpybutil):
+        import xpybutil.window
+        xpybutil.window.listen(xpybutil.root, "PropertyChange")
