@@ -78,7 +78,10 @@ class MPDHook(_Hook):
 
     def stop(self):
         super().stop()
-        self._mpdclient.close()
+        try:
+            self._mpdclient.close()
+        except:
+            pass
         self._mpdclient.noidle()
         self._mpdclient.disconnect()
 
