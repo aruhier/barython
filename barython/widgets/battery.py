@@ -108,9 +108,17 @@ class BatteryWidget(Widget):
             except ZeroDivisionError:
                 infos["capacity"] = 0
         try:
-            infos["remains"] = int(
-                60 * infos.get("energy_now", 0)/infos.get("power_now", 0)
-            )
+            if infos["status"].lower() == BAT_STATUS["CHARGING"]:
+                energy_to_charge = (
+                    infos.get("energy_full", 0) - infos.get("energy_now", 0)
+                )
+                infos["remains"] = int(
+                    60 * energy_to_charge/infos.get("power_now", 0)
+                )
+            else:
+                infos["remains"] = int(
+                    60 * infos.get("energy_now", 0)/infos.get("power_now", 0)
+                )
         except ZeroDivisionError:
             infos["remains"] = 0
 

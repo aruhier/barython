@@ -14,7 +14,7 @@ BATTERIES = {
     },
     "BAT1": {
         "capacity": 40, "energy_now": 20634000, "energy_full": 51965000,
-        "power_now": 15611000, "status": "Charging", "type": "Battery"
+        "power_now": 31222000, "status": "Charging", "type": "Battery"
     }
 }
 
@@ -106,7 +106,7 @@ def test_battery_widget_organize_result_multiple_batteries(
     assert expected == (
         "BAT0: {}% - 2:18".format(infos["BAT0"]["capacity"]) +
         "  "
-        "BAT1: {}% - 1:19".format(infos["BAT1"]["capacity"])
+        "BAT1: {}% - 1:00".format(infos["BAT1"]["capacity"])
     )
 
 
