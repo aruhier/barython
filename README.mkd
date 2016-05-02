@@ -11,6 +11,10 @@ implemented yet, and no how-to has been written for now.
 Installation
 ------------
 
+Install these system dependencies (on ArchLinux, please tell me if it differs)
+on your distribution:
+  * python-xpybutil
+
 Just run:
 
 ```
