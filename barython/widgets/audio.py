@@ -34,10 +34,6 @@ class PulseAudioWidget(SubprocessWidget):
             keys = [i[0] for i in volume_icons]
             return volume_icons[bisect_left(keys, self._volume, lo=1) - 1][1]
 
-    @icon.setter
-    def icon(self, value):
-        self._icon = value
-
     @protect_handler
     def handler(self, event, *args, **kwargs):
         """

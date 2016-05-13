@@ -29,11 +29,20 @@ class Widget():
     """
     #: cache the content after update
     _content = None
+    _icon = None
     _refresh = -1
 
     @property
     def content(self):
         return self._content
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @icon.setter
+    def icon(self, value):
+        self._icon = value
 
     @property
     def refresh(self):
@@ -177,7 +186,7 @@ class Widget():
 
         #: icon to use. Can be a string or a dict for some widgets, where icon
         #  will depend about the current value.
-        self.icon = icon
+        self._icon = icon
 
         #: dictionnary of actions
         self.actions = actions if actions is not None else dict()
