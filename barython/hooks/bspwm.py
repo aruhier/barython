@@ -42,7 +42,7 @@ class BspwmHook(SubprocessHook):
         if cmd is None:
             if bspwm_version == "0.9":
                 cmd = ["bspc", "control", "--subscribe"]
-            elif bspwm_version == "0.9.1":
+            elif bspwm_version >= "0.9.1":
                 cmd = ["bspc", "subscribe", "report"]
         self.bspwm_version = bspwm_version
         super().__init__(*args, **kwargs, cmd=cmd,

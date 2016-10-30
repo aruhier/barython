@@ -125,7 +125,7 @@ class BspwmDesktopWidget(Widget):
                  fg_focused_free=None, bg_focused_free=None,
                  fg_focused_urgent=None, bg_focused_urgent=None,
                  fg_focused_monitor=None, bg_focused_monitor=None,
-                 fixed_order=None, bspwm_version="0.9.1",
+                 fixed_order=None, bspwm_version="0.9.2",
                  *args, **kwargs):
         super().__init__(*args, **kwargs, infinite=False)
 
