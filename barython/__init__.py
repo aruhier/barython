@@ -60,16 +60,18 @@ class _BarSpawner():
 
         :param no_wait: does not wait for the refresh time before leaving
         """
-        locked = self._refresh_lock.acquire(blocking=False)
-        # More than 2 threads are already here, doesn't make any sense to wait
-        # because the screen will be updated
-        if locked is False:
-            return
-        with self._update_lock:
-            self.draw()
-            if not no_wait:
-                time.sleep(self.refresh)
-        self._refresh_lock.release()
+        try:
+            locked = self._refresh_lock.acquire(blocking=False)
+            # More than 2 threads are already here, doesn't make any sense to
+            # wait because the screen will be updated
+            if not locked:
+                return
+            with self._update_lock:
+                self.draw()
+                if not no_wait:
+                    time.sleep(self.refresh)
+        finally:
+            self._refresh_lock.release()
 
     def init_bar(self):
         """
