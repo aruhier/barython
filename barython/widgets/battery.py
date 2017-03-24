@@ -115,6 +115,8 @@ class BatteryWidget(Widget):
                 infos["remains"] = int(
                     60 * energy_to_charge/infos.get("power_now", 0)
                 )
+            elif infos["status"].lower() == BAT_STATUS["CHARGE"]:
+                infos["remains"] = 0
             else:
                 infos["remains"] = int(
                     60 * infos.get("energy_now", 0)/infos.get("power_now", 0)
