@@ -82,7 +82,10 @@ class MPDHook(_Hook):
             self._mpdclient.close()
         except:
             pass
-        self._mpdclient.noidle()
+        try:
+            self._mpdclient.noidle()
+        except:
+            pass
         self._mpdclient.disconnect()
 
     def __init__(self, host="localhost", port=6600, password=None, refresh=1,

@@ -50,7 +50,8 @@ class _Hook():
 
     def stop(self, *args, **kwargs):
         self._stop_event.set()
-        self._running_thread.join()
+        if self._running_thread:
+            self._running_thread.join()
 
     def is_compatible(self, hook):
         return True
@@ -79,6 +80,7 @@ class _Hook():
         #: event to stop the screen. _stop_event because _stop interfers with
         #  the Thread attribute
         self._stop_event = threading.Event()
+        self._stop_event.set()
 
 
 class SubprocessHook(_Hook):
