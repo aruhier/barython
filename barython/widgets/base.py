@@ -160,15 +160,16 @@ class Widget():
 
     def start(self, *args, **kwargs):
         self._stop.clear()
+        if not self._lock_start.acquire(blocking=False):
+            return
         try:
-            if not self._lock_start.acquire(blocking=False):
-                return
             if self.infinite:
                 self.continuous_update()
             else:
                 self.update()
         finally:
-            self._lock_start.release()
+            if self._lock_start:
+                self._lock_start.release()
 
     def stop(self):
         self._stop.set()

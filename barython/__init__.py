@@ -46,7 +46,7 @@ class _BarSpawner():
         """
         Gather all widgets content
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def update(self, no_wait=False):
         """

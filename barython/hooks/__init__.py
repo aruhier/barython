@@ -13,7 +13,9 @@ from barython.tools import splitted_sleep
 logger = logging.getLogger("barython")
 
 
-class _Hook(threading.Thread):
+class _Hook():
+    _running_thread = None
+
     def parse_event(self, event):
         """
         Parse event and return a kwargs meant be used by notify() then
@@ -30,12 +32,25 @@ class _Hook(threading.Thread):
         if self.refresh:
             splitted_sleep(self.refresh, stop=self._stop_event.is_set)
 
+    def run(self, *args, **kwargs):
+        raise NotImplementedError()
+
     def start(self, *args, **kwargs):
+        if self._running_thread and self._running_thread.is_alive():
+            raise threading.ThreadError("Thread already running")
+
         self._stop_event.clear()
-        return super().start(*args, **kwargs)
+        self._running_thread = threading.Thread(
+            target=self.run, args=args, kwargs=kwargs, daemon=self.daemon
+        )
+        self._running_thread.start()
+
+    def is_started(self):
+        return not self._stop_event.is_set()
 
     def stop(self, *args, **kwargs):
         self._stop_event.set()
+        self._running_thread.join()
 
     def is_compatible(self, hook):
         return True
@@ -43,6 +58,7 @@ class _Hook(threading.Thread):
     def copy(self):
         new_h = copy_module.copy(self)
         new_h.callbacks = self.callbacks.copy()
+        new_h._running_thread = None
         return new_h
 
     def __init__(self, callbacks=None, refresh=0, failure_refresh=0,
@@ -90,6 +106,9 @@ class SubprocessHook(_Hook):
         while not self._stop_event.is_set():
             try:
                 self._subproc = self._init_subproc()
+                if self._subproc is None:
+                    continue
+
                 line = self._subproc.stdout.readline()
                 notify_kwargs = self.parse_event(
                     line.decode().replace('\n', '').replace('\r', '')
@@ -102,21 +121,25 @@ class SubprocessHook(_Hook):
             except Exception as e:
                 logger.error("Error when reading line: {}".format(e))
                 try:
-                    self._subproc = self._subproc.kill()
+                    self._subproc.kill()
                 except:
                     pass
         try:
-            self._subproc = self._subproc.kill()
+            self._subproc.kill()
         except:
             pass
 
     def stop(self):
-        super().stop()
+        self._stop_event.set()
         try:
-            self._subproc.terminate()
-            self._subproc = self._subproc.wait()
-        except:
-            self._subproc = None
+            if self._subproc:
+                self._subproc.terminate()
+                self._subproc.wait()
+        except Exception as e:
+            logger.error("Error when shutting down {}: \n{}".format(
+                self.__class__, e
+            ))
+        super().stop()
 
     def __init__(self, cmd, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -186,13 +209,26 @@ class HooksPool():
     def start(self):
         if self.listen:
             for h in (h for hook in self.hooks.values() for h in hook):
-                h.start()
+                try:
+                    if not h.is_started():
+                        h.start()
+                except Exception as e:
+                    logger.error("Error when starting hook {}: {}".format(
+                        h.__class__, e
+                    ))
 
     def stop(self):
         for h in (h for hook in self.hooks.values() for h in hook):
             try:
                 h.stop()
-            except:
+                if h.is_started():
+                    logger.error("Error when stopping hook {}".format(
+                        h.__class__
+                    ))
+            except Exception as e:
+                logger.error("Error when stopping hook {}: {}".format(
+                    h.__class__, e
+                ))
                 continue
 
     def __init__(self, listen=False, parent=None, *args, **kwargs):
