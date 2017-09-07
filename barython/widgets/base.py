@@ -265,7 +265,7 @@ class SubprocessWidget(Widget):
             cmd = shlex.split(cmd)
         logger.debug("Launching {}".format(" ".join(cmd)))
         return subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, shell=self.shell
+            cmd, stdout=subprocess.PIPE, shell=self.shell, env=self.env
         )
 
     def _init_subscribe_subproc(self):
@@ -334,6 +334,10 @@ class SubprocessWidget(Widget):
     def __init__(self, cmd, subscribe_cmd=None, shell=False, infinite=True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs, infinite=infinite)
+
+        #: override environment variables to get the same output everywhere
+        self.env = dict(os.environ)
+        self.env["LANG"] = "en_US"
 
         #: command to run. Can be an iterable or a string
         self.cmd = cmd

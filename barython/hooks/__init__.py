@@ -3,6 +3,7 @@
 
 import copy as copy_module
 import logging
+import os
 import shlex
 import subprocess
 import threading
@@ -99,7 +100,8 @@ class SubprocessHook(_Hook):
         if process_dead:
             logger.debug("Launching {}".format(" ".join(self.cmd)))
             return subprocess.Popen(
-                self.cmd, stdout=subprocess.PIPE, shell=self.shell
+                self.cmd, stdout=subprocess.PIPE, shell=self.shell,
+                env=self.env
             )
         else:
             return self._subproc
@@ -147,6 +149,10 @@ class SubprocessHook(_Hook):
         super().__init__(*args, **kwargs)
         if isinstance(cmd, str):
             cmd = shlex.split(cmd)
+
+        #: override environment variables to get the same output everywhere
+        self.env = dict(os.environ)
+        self.env["LANG"] = "en_US"
         self.cmd = cmd
         self.shell = False
 
