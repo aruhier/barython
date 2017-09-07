@@ -40,7 +40,7 @@ class PulseAudioWidget(SubprocessWidget):
         Filter events sent by notifications
         """
         # Only notify if there is something changes in pulseaudio
-        event_change_msg = "Event 'change' on destination"
+        event_change_msg = "Event 'change' on sink"
         if event_change_msg in event:
             logger.debug("PA: line \"{}\" catched.".format(event))
             with self._lock_update:
