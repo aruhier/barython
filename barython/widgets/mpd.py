@@ -65,11 +65,15 @@ class MPDWidget(Widget):
         """
         Override this method to change the infos to print
         """
+        if not running:
+            return ""
+
         # avoid doing useless connections to mpd
         icon = self.icon
+        artist, title = None, None
         if current:
-            artist, title = current["artist"], current["title"]
-        if not running:
+            artist, title = current.get("artist"), current.get("title")
+        if not running or not artist and not title:
             return "{}".format(icon) if icon else ""
         if icon:
             return (
@@ -84,7 +88,7 @@ class MPDWidget(Widget):
             return self.trigger_global_update(
                 self.organize_result(running=False)
             )
-        return super().handler(event=event, run=run, *args, **kwargs)
+        return super().handler(event=event, *args, **kwargs)
 
     def update(self, *args, **kwargs):
         try:
@@ -108,7 +112,4 @@ class MPDWidget(Widget):
         self._mpdclient = mpd.MPDClient()
         if password:
             self.password(password)
-        self.hooks.subscribe(
-            self.handler, MPDHook, host=self.host, port=self.port,
-            password=password, refresh=self.refresh
-        )
+        self.hooks.subscribe(self.handler, MPDHook, refresh=self.refresh)

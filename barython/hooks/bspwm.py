@@ -17,6 +17,9 @@ class BspwmHook(SubprocessHook):
         Parse event and return a kwargs meant be used by notify() then
         """
         monitors = OrderedDict()
+        if not event:
+            return {"monitors": monitors}
+
         # remove the "W" at the begining of the status
         status = event[1:]
         parsed_status = status.split(":")

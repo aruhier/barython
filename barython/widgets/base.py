@@ -15,10 +15,16 @@ logger = logging.getLogger("barython")
 
 def protect_handler(handler):
     def handler_wrapper(self, *args, **kwargs):
-        if not self._refresh_lock.acquire(blocking=False):
-            return
-        result = handler(self, *args, **kwargs)
-        self._refresh_lock.release()
+        try:
+            if not self._refresh_lock.acquire(blocking=False):
+                return
+            result = handler(self, *args, **kwargs)
+        finally:
+            if self._lock_start:
+                try:
+                    self._refresh_lock.release()
+                except RuntimeError:
+                    pass
         return result
     return handler_wrapper
 
@@ -73,7 +79,7 @@ class Widget():
         except (TypeError, AttributeError):
             joined_actions = ""
         # if colors are reset in text, padding will not have the good colors
-        if padding:
+        if padding and text:
             padding_str = self.decorate(padding * " ", fg=fg, bg=bg, font=font)
         else:
             padding_str = ""
@@ -160,16 +166,19 @@ class Widget():
 
     def start(self, *args, **kwargs):
         self._stop.clear()
-        if not self._lock_start.acquire(blocking=False):
-            return
         try:
+            if not self._lock_start.acquire(blocking=False):
+                return
             if self.infinite:
                 self.continuous_update()
             else:
                 self.update()
         finally:
             if self._lock_start:
-                self._lock_start.release()
+                try:
+                    self._lock_start.release()
+                except RuntimeError:
+                    pass
 
     def stop(self):
         self._stop.set()

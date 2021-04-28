@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
+import time
 
 from .base import Widget
 
@@ -10,6 +11,7 @@ class ClockWidget(Widget):
         return super().organize_result(date_now.strftime(self.date_format))
 
     def update(self, *args, **kwargs):
+        time.tzset()
         self.trigger_global_update(
             self.organize_result(datetime.now())
         )

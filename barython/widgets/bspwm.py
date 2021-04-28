@@ -26,10 +26,13 @@ class BspwmDesktopWidget(Widget):
     }
 
     @protect_handler
-    def handler(self, monitors, *args, **kwargs):
+    def handler(self, monitors, run=True, *args, **kwargs):
         """
         Filter events sent by notifications
         """
+        if not run:
+            return
+
         new_content = self.decorate_with_self_attributes(
             self.organize_result(monitors)
         )
